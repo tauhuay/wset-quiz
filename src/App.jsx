@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { Wine, CheckCircle, XCircle, Trophy, Award, Medal, RotateCcw, Play, Sparkles, Users, BookOpen, ChevronLeft, X, Skull } from 'lucide-react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { Wine, CheckCircle, XCircle, Trophy, Award, Medal, RotateCcw, Play, Sparkles, Users, BookOpen, ChevronLeft, X, Skull, Zap } from 'lucide-react';
 
 // REIGN OF TERROIR Logo Component
 const Logo = () => (
@@ -9,6 +9,81 @@ const Logo = () => (
     <span className="text-2xl md:text-3xl font-black tracking-wider text-white" style={{fontFamily: 'Impact, sans-serif', textShadow: '2px 2px 4px rgba(0,0,0,0.5)'}}>TERROIR</span>
   </div>
 );
+
+// Simple Canvas Confetti Component
+const Confetti = () => {
+  const canvasRef = useRef(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+    let animationFrameId;
+    
+    // Set canvas size
+    const resize = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    };
+    window.addEventListener('resize', resize);
+    resize();
+
+    // Confetti particles
+    const particles = [];
+    const colors = ['#FFD700', '#FF69B4', '#00FFFF', '#7FFF00', '#FF4500'];
+
+    for (let i = 0; i < 150; i++) {
+      particles.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height - canvas.height,
+        rotation: Math.random() * 360,
+        speedX: Math.random() * 2 - 1,
+        speedY: Math.random() * 3 + 2,
+        speedRotation: Math.random() * 2 - 1,
+        color: colors[Math.floor(Math.random() * colors.length)],
+        size: Math.random() * 10 + 5,
+      });
+    }
+
+    const animate = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      particles.forEach((p) => {
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate((p.rotation * Math.PI) / 180);
+        ctx.fillStyle = p.color;
+        ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+        ctx.restore();
+
+        p.y += p.speedY;
+        p.x += p.speedX;
+        p.rotation += p.speedRotation;
+
+        // Reset if off screen
+        if (p.y > canvas.height) {
+          p.y = -20;
+          p.x = Math.random() * canvas.width;
+        }
+      });
+
+      animationFrameId = requestAnimationFrame(animate);
+    };
+
+    animate();
+
+    return () => {
+      window.removeEventListener('resize', resize);
+      cancelAnimationFrame(animationFrameId);
+    };
+  }, []);
+
+  return (
+    <canvas 
+      ref={canvasRef} 
+      className="fixed inset-0 pointer-events-none z-50"
+    />
+  );
+};
 
 // Category definitions with question IDs
 const CATEGORIES = {
@@ -23,7 +98,7 @@ const CATEGORIES = {
   labeling: { name: 'Labels & Classification', ids: [79,80,81,82,83,84,85,87,89,186,187,188,189,190,198,199,200] }
 };
 
-// All 200 Questions
+// All 200 Questions - REBALANCED ANSWERS FOR 101-200
 const QUESTIONS = [
   // ORIGINAL 100 QUESTIONS (IDs 1-100)
   { id: 1, question: "Which grape variety is used to make Meursault?", options: ["Sauvignon Blanc", "Riesling", "Chardonnay", "Pinot Gris"], correct: 2, explanation: "Meursault is a prestigious village in Burgundy's Côte de Beaune, where 100% Chardonnay is used for white wines. These wines are typically full-bodied with stone fruit flavors and often show oak influence." },
@@ -127,107 +202,233 @@ const QUESTIONS = [
   { id: 99, question: "Which winemaking technique is used to increase color extraction in red wines?", options: ["Cold fermentation", "Extended maceration", "Malolactic fermentation", "Early bottling"], correct: 1, explanation: "Extended maceration (leaving juice in contact with skins after fermentation) extracts more color, tannin, and flavor compounds. Common for age-worthy reds." },
   { id: 100, question: "What is whole-bunch fermentation?", options: ["Using only the best grape bunches", "Fermenting grapes with stems included", "Fermenting in large batches", "Using whole berries only"], correct: 1, explanation: "Whole-bunch fermentation includes grape stems during fermentation, adding structure, freshness, and sometimes herbal/spice notes. Popular in Burgundy and increasingly in Rhône and beyond." },
 
-  // NEW 100 QUESTIONS (IDs 101-200)
-  { id: 101, question: "Which characteristic is typical of Pinot Noir from Burgundy?", options: ["Deep, inky color", "High tannin and full body", "Light to medium body with red fruit and earthy notes", "Jammy, overripe fruit flavors"], correct: 2, explanation: "Burgundy Pinot Noir is typically light to medium-bodied with delicate red fruit (cherry, raspberry), floral notes, and earthy/mushroom undertones. It rarely achieves deep color or heavy tannins." },
+  // NEW 100 QUESTIONS (IDs 101-200) - REBALANCED
+  // Pattern: A(0), B(1), C(2), D(3) repeating for even distribution
+  
+  // 101 - Target: A (0)
+  { id: 101, question: "Which characteristic is typical of Pinot Noir from Burgundy?", options: ["Light to medium body with red fruit and earthy notes", "Deep, inky color", "High tannin and full body", "Jammy, overripe fruit flavors"], correct: 0, explanation: "Burgundy Pinot Noir is typically light to medium-bodied with delicate red fruit (cherry, raspberry), floral notes, and earthy/mushroom undertones. It rarely achieves deep color or heavy tannins." },
+  // 102 - Target: B (1)
   { id: 102, question: "What flavors are characteristic of Cabernet Franc?", options: ["Tropical fruit and honey", "Bell pepper, raspberry, and violet", "Citrus and mineral", "Butter and vanilla"], correct: 1, explanation: "Cabernet Franc is known for its herbaceous character (bell pepper, leafy notes), red fruit (raspberry, strawberry), violet florals, and pencil lead. It's typically lighter than Cabernet Sauvignon." },
-  { id: 103, question: "Vermentino is a white grape variety associated with which regions?", options: ["Burgundy and Champagne", "Sardinia and Provence", "Rioja and Ribera del Duero", "Mosel and Alsace"], correct: 1, explanation: "Vermentino thrives in Mediterranean climates, particularly Sardinia (where it's the signature white) and Provence/Corsica (where it's called Rolle). It produces fresh, citrusy wines with herbal notes." },
-  { id: 104, question: "Which grape variety is Amarone della Valpolicella primarily made from?", options: ["Sangiovese", "Nebbiolo", "Corvina", "Montepulciano"], correct: 2, explanation: "Corvina is the principal grape in Amarone (minimum 45-95%), often blended with Rondinella and Corvinone. These grapes are dried (appassimento) before fermentation." },
-  { id: 105, question: "Verdejo is a white grape variety most associated with:", options: ["Portugal", "Spain's Rueda region", "South Africa", "Argentina"], correct: 1, explanation: "Verdejo is the signature grape of Rueda in northwest Spain. It produces aromatic whites with fennel, citrus, and stone fruit notes, often with slight bitterness on the finish." },
-  { id: 106, question: "What style of wine is Muscadet?", options: ["Sweet and aromatic", "Full-bodied and oaky", "Light, dry, and neutral with mineral notes", "Sparkling"], correct: 2, explanation: "Muscadet (from Melon de Bourgogne) is a light, dry, neutral white from the Loire Valley. Sur lie aging adds texture and slight yeastiness. Perfect with oysters and seafood." },
-  { id: 107, question: "Touriga Nacional is the most prized grape for:", options: ["Rioja wines", "Port and Douro reds", "Chianti", "Champagne"], correct: 1, explanation: "Touriga Nacional is Portugal's finest red grape, essential for premium Port and increasingly important for top Douro table wines. It offers intense color, floral aromatics, and structured tannins." },
-  { id: 108, question: "Which of these grapes is aromatic?", options: ["Chardonnay", "Trebbiano", "Muscat", "Melon de Bourgogne"], correct: 2, explanation: "Muscat is highly aromatic with distinctive grapey, floral, and sweet spice notes. Chardonnay, Trebbiano, and Melon de Bourgogne are considered neutral varieties." },
-  { id: 109, question: "Cinsaut (Cinsault) is commonly used in:", options: ["Burgundy reds", "Southern Rhône blends and South African rosé", "German Riesling blends", "Champagne"], correct: 1, explanation: "Cinsaut is a key blending grape in Southern Rhône and Provence wines, valued for its perfume and softness. In South Africa, it's used for rosé and was crossed with Pinot Noir to create Pinotage." },
+  // 103 - Target: C (2)
+  { id: 103, question: "Vermentino is a white grape variety associated with which regions?", options: ["Burgundy and Champagne", "Rioja and Ribera del Duero", "Sardinia and Provence", "Mosel and Alsace"], correct: 2, explanation: "Vermentino thrives in Mediterranean climates, particularly Sardinia (where it's the signature white) and Provence/Corsica (where it's called Rolle). It produces fresh, citrusy wines with herbal notes." },
+  // 104 - Target: D (3)
+  { id: 104, question: "Which grape variety is Amarone della Valpolicella primarily made from?", options: ["Sangiovese", "Nebbiolo", "Montepulciano", "Corvina"], correct: 3, explanation: "Corvina is the principal grape in Amarone (minimum 45-95%), often blended with Rondinella and Corvinone. These grapes are dried (appassimento) before fermentation." },
+  
+  // 105 - Target: A (0)
+  { id: 105, question: "Verdejo is a white grape variety most associated with:", options: ["Spain's Rueda region", "Portugal", "South Africa", "Argentina"], correct: 0, explanation: "Verdejo is the signature grape of Rueda in northwest Spain. It produces aromatic whites with fennel, citrus, and stone fruit notes, often with slight bitterness on the finish." },
+  // 106 - Target: B (1)
+  { id: 106, question: "What style of wine is Muscadet?", options: ["Sweet and aromatic", "Light, dry, and neutral with mineral notes", "Full-bodied and oaky", "Sparkling"], correct: 1, explanation: "Muscadet (from Melon de Bourgogne) is a light, dry, neutral white from the Loire Valley. Sur lie aging adds texture and slight yeastiness. Perfect with oysters and seafood." },
+  // 107 - Target: C (2)
+  { id: 107, question: "Touriga Nacional is the most prized grape for:", options: ["Rioja wines", "Chianti", "Port and Douro reds", "Champagne"], correct: 2, explanation: "Touriga Nacional is Portugal's finest red grape, essential for premium Port and increasingly important for top Douro table wines. It offers intense color, floral aromatics, and structured tannins." },
+  // 108 - Target: D (3)
+  { id: 108, question: "Which of these grapes is aromatic?", options: ["Chardonnay", "Trebbiano", "Melon de Bourgogne", "Muscat"], correct: 3, explanation: "Muscat is highly aromatic with distinctive grapey, floral, and sweet spice notes. Chardonnay, Trebbiano, and Melon de Bourgogne are considered neutral varieties." },
+  
+  // 109 - Target: A (0)
+  { id: 109, question: "Cinsaut (Cinsault) is commonly used in:", options: ["Southern Rhône blends and South African rosé", "Burgundy reds", "German Riesling blends", "Champagne"], correct: 0, explanation: "Cinsaut is a key blending grape in Southern Rhône and Provence wines, valued for its perfume and softness. In South Africa, it's used for rosé and was crossed with Pinot Noir to create Pinotage." },
+  // 110 - Target: B (1)
   { id: 110, question: "What distinguishes Pinot Gris from Pinot Grigio?", options: ["They are completely different grapes", "Pinot Gris (Alsace style) is richer and fuller than Pinot Grigio (Italian style)", "Pinot Grigio is always sweeter", "There is no difference"], correct: 1, explanation: "Same grape, different styles: Alsace Pinot Gris is typically richer, fuller-bodied, sometimes with residual sugar and honeyed notes. Italian Pinot Grigio is usually light, crisp, and neutral." },
-  { id: 111, question: "Which statement about Marsanne and Roussanne is correct?", options: ["They are red grape varieties", "They are often blended together in Northern Rhône whites", "They are only grown in Italy", "They require cold climates"], correct: 1, explanation: "Marsanne and Roussanne are white Rhône varieties often blended together. Marsanne adds weight and nuttiness; Roussanne contributes acidity, herbal notes, and elegance." },
-  { id: 112, question: "Nero d'Avola is the most important red grape of:", options: ["Tuscany", "Piedmont", "Sicily", "Lombardy"], correct: 2, explanation: "Nero d'Avola is Sicily's signature red grape, producing wines ranging from easy-drinking to serious, age-worthy reds with dark fruit, spice, and chocolate notes." },
-  { id: 113, question: "What is the key characteristic of Tannat wines?", options: ["Light body and low tannin", "Very high tannin and deep color", "Aromatic and floral", "High residual sugar"], correct: 1, explanation: "Tannat is named for its extremely high tannin content. Native to southwest France (Madiran), it found success in Uruguay. Modern winemaking can tame its astringency." },
+  // 111 - Target: C (2)
+  { id: 111, question: "Which statement about Marsanne and Roussanne is correct?", options: ["They are red grape varieties", "They are only grown in Italy", "They are often blended together in Northern Rhône whites", "They require cold climates"], correct: 2, explanation: "Marsanne and Roussanne are white Rhône varieties often blended together. Marsanne adds weight and nuttiness; Roussanne contributes acidity, herbal notes, and elegance." },
+  // 112 - Target: D (3)
+  { id: 112, question: "Nero d'Avola is the most important red grape of:", options: ["Tuscany", "Piedmont", "Lombardy", "Sicily"], correct: 3, explanation: "Nero d'Avola is Sicily's signature red grape, producing wines ranging from easy-drinking to serious, age-worthy reds with dark fruit, spice, and chocolate notes." },
+
+  // 113 - Target: A (0)
+  { id: 113, question: "What is the key characteristic of Tannat wines?", options: ["Very high tannin and deep color", "Light body and low tannin", "Aromatic and floral", "High residual sugar"], correct: 0, explanation: "Tannat is named for its extremely high tannin content. Native to southwest France (Madiran), it found success in Uruguay. Modern winemaking can tame its astringency." },
+  // 114 - Target: B (1)
   { id: 114, question: "Aglianico is a red grape grown primarily in:", options: ["Northern Italy", "Southern Italy (Campania and Basilicata)", "Sicily", "Sardinia"], correct: 1, explanation: "Aglianico produces powerful, age-worthy reds in Campania (Taurasi) and Basilicata (Aglianico del Vulture). Often called 'the Barolo of the South' for its structure and complexity." },
-  { id: 115, question: "Which grape variety is associated with orange/amber wines from Georgia?", options: ["Saperavi", "Rkatsiteli", "Both Saperavi and Rkatsiteli", "Mtsvane only"], correct: 1, explanation: "Rkatsiteli is Georgia's most planted white grape, often used for traditional amber wines fermented with extended skin contact in qvevri (clay vessels). Saperavi is the main red grape." },
-  { id: 116, question: "Furmint is the primary grape for:", options: ["Austrian Grüner Veltliner", "Hungarian Tokaji", "German Riesling", "Italian Prosecco"], correct: 1, explanation: "Furmint is the principal grape for Hungary's famous Tokaji Aszú sweet wines. It's susceptible to noble rot and maintains high acidity even at high sugar levels." },
-  { id: 117, question: "Which variety is Côte-Rôtie famous for blending with Syrah?", options: ["Marsanne", "Grenache", "Viognier", "Roussanne"], correct: 2, explanation: "Côte-Rôtie uniquely permits adding up to 20% white Viognier to red Syrah, co-fermented for aromatic lift, perfume, and color stabilization. Few other regions allow this practice." },
+  // 115 - Target: C (2)
+  { id: 115, question: "Which grape variety is associated with orange/amber wines from Georgia?", options: ["Saperavi", "Mtsvane only", "Rkatsiteli", "Both Saperavi and Rkatsiteli"], correct: 2, explanation: "Rkatsiteli is Georgia's most planted white grape, often used for traditional amber wines fermented with extended skin contact in qvevri (clay vessels). Saperavi is the main red grape." },
+  // 116 - Target: D (3)
+  { id: 116, question: "Furmint is the primary grape for:", options: ["Austrian Grüner Veltliner", "German Riesling", "Italian Prosecco", "Hungarian Tokaji"], correct: 3, explanation: "Furmint is the principal grape for Hungary's famous Tokaji Aszú sweet wines. It's susceptible to noble rot and maintains high acidity even at high sugar levels." },
+
+  // 117 - Target: A (0)
+  { id: 117, question: "Which variety is Côte-Rôtie famous for blending with Syrah?", options: ["Viognier", "Marsanne", "Grenache", "Roussanne"], correct: 0, explanation: "Côte-Rôtie uniquely permits adding up to 20% white Viognier to red Syrah, co-fermented for aromatic lift, perfume, and color stabilization. Few other regions allow this practice." },
+  // 118 - Target: B (1)
   { id: 118, question: "What is Bobal?", options: ["A Spanish white grape", "A Spanish red grape from Valencia/Utiel-Requena", "A Portuguese grape", "A French grape"], correct: 1, explanation: "Bobal is Spain's third most-planted red grape, concentrated in Valencia's Utiel-Requena region. It produces dark, fruity wines and is increasingly valued for quality production." },
-  { id: 119, question: "Schiava (Vernatsch) is associated with which wine region?", options: ["Tuscany", "Alto Adige/Südtirol", "Veneto", "Piedmont"], correct: 1, explanation: "Schiava is the traditional red grape of Alto Adige in northern Italy. It produces light, fruity, low-tannin wines often compared to Beaujolais in style." },
-  { id: 120, question: "What characterizes Godello wines?", options: ["High tannin and deep color", "Rich, textured whites with stone fruit and mineral notes", "Light, fizzy, and simple", "Always sweet"], correct: 1, explanation: "Godello from Valdeorras and Bierzo in northwest Spain produces rich, textured white wines with stone fruit, citrus, and distinctive mineral character. It's experiencing a quality renaissance." },
-  { id: 121, question: "Petit Verdot is used primarily as:", options: ["A single-variety wine grape", "A blending grape adding color and spice to Bordeaux blends", "A white wine grape", "A sparkling wine grape"], correct: 1, explanation: "Petit Verdot ripens late and is used in small percentages in Bordeaux blends, contributing deep color, violet aromas, and spicy notes. Rarely bottled alone except in warmer regions." },
+  // 119 - Target: C (2)
+  { id: 119, question: "Schiava (Vernatsch) is associated with which wine region?", options: ["Tuscany", "Veneto", "Alto Adige/Südtirol", "Piedmont"], correct: 2, explanation: "Schiava is the traditional red grape of Alto Adige in northern Italy. It produces light, fruity, low-tannin wines often compared to Beaujolais in style." },
+  // 120 - Target: D (3)
+  { id: 120, question: "What characterizes Godello wines?", options: ["High tannin and deep color", "Light, fizzy, and simple", "Always sweet", "Rich, textured whites with stone fruit and mineral notes"], correct: 3, explanation: "Godello from Valdeorras and Bierzo in northwest Spain produces rich, textured white wines with stone fruit, citrus, and distinctive mineral character. It's experiencing a quality renaissance." },
+
+  // 121 - Target: A (0)
+  { id: 121, question: "Petit Verdot is used primarily as:", options: ["A blending grape adding color and spice to Bordeaux blends", "A single-variety wine grape", "A white wine grape", "A sparkling wine grape"], correct: 0, explanation: "Petit Verdot ripens late and is used in small percentages in Bordeaux blends, contributing deep color, violet aromas, and spicy notes. Rarely bottled alone except in warmer regions." },
+  // 122 - Target: B (1)
   { id: 122, question: "Which grape makes Vinho Verde?", options: ["A single specific grape", "Various grapes including Loureiro and Alvarinho", "Albariño only", "Tempranillo"], correct: 1, explanation: "Vinho Verde is a region, not a grape. It uses various local white grapes including Loureiro (floral), Alvarinho (aromatic, structured), Trajadura, and Arinto." },
-  { id: 123, question: "Blaufränkisch is known in Austria for producing:", options: ["Light, sweet whites", "Medium to full-bodied reds with cherry and spice", "Aromatic sparkling wines", "Dessert wines only"], correct: 1, explanation: "Blaufränkisch (called Lemberger in Germany, Kékfrankos in Hungary) produces serious red wines in Austria's Burgenland with dark cherry, pepper, and minerality." },
-  { id: 124, question: "What is the principal grape in Gavi (Gavi di Gavi)?", options: ["Arneis", "Cortese", "Favorita", "Erbaluce"], correct: 1, explanation: "Cortese is the grape behind Gavi, a crisp, dry white from Piedmont. At its best, it shows citrus, almond, and mineral notes with refreshing acidity." },
-  { id: 125, question: "Mencía is a red grape from:", options: ["Portugal's Douro Valley", "Spain's Bierzo region", "France's Languedoc", "Italy's Piedmont"], correct: 1, explanation: "Mencía is the signature red of Bierzo in northwest Spain (and Ribeira Sacra). It produces fragrant, medium-bodied reds with red fruit, floral, and mineral notes." },
+  // 123 - Target: C (2)
+  { id: 123, question: "Blaufränkisch is known in Austria for producing:", options: ["Light, sweet whites", "Aromatic sparkling wines", "Medium to full-bodied reds with cherry and spice", "Dessert wines only"], correct: 2, explanation: "Blaufränkisch (called Lemberger in Germany, Kékfrankos in Hungary) produces serious red wines in Austria's Burgenland with dark cherry, pepper, and minerality." },
+  // 124 - Target: D (3)
+  { id: 124, question: "What is the principal grape in Gavi (Gavi di Gavi)?", options: ["Arneis", "Favorita", "Erbaluce", "Cortese"], correct: 3, explanation: "Cortese is the grape behind Gavi, a crisp, dry white from Piedmont. At its best, it shows citrus, almond, and mineral notes with refreshing acidity." },
+
+  // 125 - Target: A (0)
+  { id: 125, question: "Mencía is a red grape from:", options: ["Spain's Bierzo region", "Portugal's Douro Valley", "France's Languedoc", "Italy's Piedmont"], correct: 0, explanation: "Mencía is the signature red of Bierzo in northwest Spain (and Ribeira Sacra). It produces fragrant, medium-bodied reds with red fruit, floral, and mineral notes." },
+  // 126 - Target: B (1)
   { id: 126, question: "Which statement about Carignan (Carignane/Cariñena) is TRUE?", options: ["It's always light and delicate", "Old vine Carignan can produce concentrated, characterful wines", "It's only used for white wines", "It originated in Burgundy"], correct: 1, explanation: "While bulk Carignan can be rustic, old-vine Carignan (especially from Languedoc, Priorat) produces concentrated, complex wines. It was historically the world's most planted variety." },
-  { id: 127, question: "Friulano (formerly Tocai Friulano) is associated with:", options: ["Tuscany", "Friuli-Venezia Giulia", "Sicily", "Lombardy"], correct: 1, explanation: "Friulano is the signature white grape of Friuli in northeast Italy. It produces wines with almond, floral, and herbal notes with a characteristically bitter finish." },
-  { id: 128, question: "What grape is Txakoli (Txakolina) made from?", options: ["Tempranillo", "Hondarrabi Zuri", "Albariño", "Verdejo"], correct: 1, explanation: "Txakoli is a light, slightly spritzy, high-acid white from Spain's Basque Country, primarily from Hondarrabi Zuri grapes. It's traditionally poured from height to aerate." },
-  { id: 129, question: "Assyrtiko is best known for retaining which characteristic?", options: ["Deep color", "High acidity even in hot climates", "High tannin", "Residual sugar"], correct: 1, explanation: "Assyrtiko remarkably maintains high acidity despite Santorini's hot climate and volcanic soils. This makes it age-worthy and food-friendly despite the Mediterranean heat." },
+  // 127 - Target: C (2)
+  { id: 127, question: "Friulano (formerly Tocai Friulano) is associated with:", options: ["Tuscany", "Sicily", "Friuli-Venezia Giulia", "Lombardy"], correct: 2, explanation: "Friulano is the signature white grape of Friuli in northeast Italy. It produces wines with almond, floral, and herbal notes with a characteristically bitter finish." },
+  // 128 - Target: D (3)
+  { id: 128, question: "What grape is Txakoli (Txakolina) made from?", options: ["Tempranillo", "Albariño", "Verdejo", "Hondarrabi Zuri"], correct: 3, explanation: "Txakoli is a light, slightly spritzy, high-acid white from Spain's Basque Country, primarily from Hondarrabi Zuri grapes. It's traditionally poured from height to aerate." },
+
+  // 129 - Target: A (0)
+  { id: 129, question: "Assyrtiko is best known for retaining which characteristic?", options: ["High acidity even in hot climates", "Deep color", "High tannin", "Residual sugar"], correct: 0, explanation: "Assyrtiko remarkably maintains high acidity despite Santorini's hot climate and volcanic soils. This makes it age-worthy and food-friendly despite the Mediterranean heat." },
+  // 130 - Target: B (1)
   { id: 130, question: "What is Pecorino in the wine world?", options: ["A cheese used in wine production", "A white grape from central Italy", "A style of wine from Spain", "A type of oak barrel"], correct: 1, explanation: "Pecorino is a white grape from Marche and Abruzzo in Italy, producing crisp wines with citrus, floral, and mineral notes. The name is unrelated to the cheese (both derive from 'pecora' meaning sheep)." },
-  { id: 131, question: "The Willamette Valley is best known for which grape?", options: ["Cabernet Sauvignon", "Pinot Noir", "Syrah", "Zinfandel"], correct: 1, explanation: "Oregon's Willamette Valley has emerged as one of the world's premier Pinot Noir regions, producing elegant wines with red fruit, earth, and spice. Cool climate and varied soils suit the variety." },
-  { id: 132, question: "What makes Priorat wines distinctive?", options: ["Slate (llicorella) soils and old-vine Garnacha/Cariñena", "Maritime influence and Tempranillo", "Limestone soils and Pinot Noir", "Volcanic soils and Syrah"], correct: 0, explanation: "Priorat's steep llicorella (slate and quartz) soils with old-vine Garnacha and Cariñena produce intense, mineral-driven wines. It's one of only two DOCa regions in Spain." },
-  { id: 133, question: "Which sub-region of Burgundy produces only white wines?", options: ["Côte de Nuits", "Côte de Beaune", "Chablis", "Côte Chalonnaise"], correct: 2, explanation: "Chablis produces exclusively white wines from Chardonnay. The Côte de Nuits is predominantly red; Côte de Beaune and Côte Chalonnaise produce both." },
+  // 131 - Target: C (2)
+  { id: 131, question: "The Willamette Valley is best known for which grape?", options: ["Cabernet Sauvignon", "Syrah", "Pinot Noir", "Zinfandel"], correct: 2, explanation: "Oregon's Willamette Valley has emerged as one of the world's premier Pinot Noir regions, producing elegant wines with red fruit, earth, and spice. Cool climate and varied soils suit the variety." },
+  // 132 - Target: D (3)
+  { id: 132, question: "What makes Priorat wines distinctive?", options: ["Maritime influence and Tempranillo", "Limestone soils and Pinot Noir", "Volcanic soils and Syrah", "Slate (llicorella) soils and old-vine Garnacha/Cariñena"], correct: 3, explanation: "Priorat's steep llicorella (slate and quartz) soils with old-vine Garnacha and Cariñena produce intense, mineral-driven wines. It's one of only two DOCa regions in Spain." },
+
+  // 133 - Target: A (0)
+  { id: 133, question: "Which sub-region of Burgundy produces only white wines?", options: ["Chablis", "Côte de Nuits", "Côte de Beaune", "Côte Chalonnaise"], correct: 0, explanation: "Chablis produces exclusively white wines from Chardonnay. The Côte de Nuits is predominantly red; Côte de Beaune and Côte Chalonnaise produce both." },
+  // 134 - Target: B (1)
   { id: 134, question: "The Casablanca Valley in Chile is known for:", options: ["Warm-climate Cabernet Sauvignon", "Cool-climate whites and Pinot Noir", "Fortified wines", "Traditional method sparkling"], correct: 1, explanation: "Casablanca Valley's coastal fog influence creates cool conditions ideal for Sauvignon Blanc, Chardonnay, and Pinot Noir. It's Chile's pioneering cool-climate region." },
-  { id: 135, question: "What is unique about Jerez's 'albariza' soils?", options: ["They are volcanic", "They are white, chalky, and retain moisture well", "They are rich in iron", "They are primarily sand"], correct: 1, explanation: "Albariza is the prized white, chalky soil of Jerez, containing up to 80% calcium carbonate. It reflects heat, retains moisture, and produces Sherry's finest wines." },
-  { id: 136, question: "Hawke's Bay, New Zealand is best known for:", options: ["Sauvignon Blanc", "Bordeaux-style reds and Chardonnay", "Pinot Noir", "Riesling"], correct: 1, explanation: "Hawke's Bay on New Zealand's North Island has a warmer climate suited to Bordeaux varieties (Cabernet, Merlot, Syrah) and fuller-bodied Chardonnay." },
-  { id: 137, question: "What distinguishes Saint-Émilion from the Médoc?", options: ["It uses only white grapes", "It features Merlot-dominant blends on limestone and clay", "It has a maritime climate", "It is classified by vine age"], correct: 1, explanation: "Saint-Émilion on Bordeaux's Right Bank has limestone plateau and clay slopes favoring Merlot over Cabernet. Wines are typically softer and earlier-maturing than Left Bank styles." },
+  // 135 - Target: C (2)
+  { id: 135, question: "What is unique about Jerez's 'albariza' soils?", options: ["They are volcanic", "They are primarily sand", "They are white, chalky, and retain moisture well", "They are rich in iron"], correct: 2, explanation: "Albariza is the prized white, chalky soil of Jerez, containing up to 80% calcium carbonate. It reflects heat, retains moisture, and produces Sherry's finest wines." },
+  // 136 - Target: D (3)
+  { id: 136, question: "Hawke's Bay, New Zealand is best known for:", options: ["Pinot Noir", "Riesling", "Sauvignon Blanc", "Bordeaux-style reds and Chardonnay"], correct: 3, explanation: "Hawke's Bay on New Zealand's North Island has a warmer climate suited to Bordeaux varieties (Cabernet, Merlot, Syrah) and fuller-bodied Chardonnay." },
+
+  // 137 - Target: A (0)
+  { id: 137, question: "What distinguishes Saint-Émilion from the Médoc?", options: ["It features Merlot-dominant blends on limestone and clay", "It uses only white grapes", "It has a maritime climate", "It is classified by vine age"], correct: 0, explanation: "Saint-Émilion on Bordeaux's Right Bank has limestone plateau and clay slopes favoring Merlot over Cabernet. Wines are typically softer and earlier-maturing than Left Bank styles." },
+  // 138 - Target: B (1)
   { id: 138, question: "Which Austrian region is famous for sweet wines from Neusiedlersee?", options: ["Wachau", "Burgenland", "Kremstal", "Kamptal"], correct: 1, explanation: "Burgenland's Neusiedlersee provides humid conditions ideal for botrytis development, producing exceptional sweet wines from Welschriesling, Chardonnay, and other varieties." },
+  // 139 - Target: C (2)
   { id: 139, question: "The Swartland is an emerging quality region in:", options: ["Australia", "Chile", "South Africa", "Argentina"], correct: 2, explanation: "South Africa's Swartland has become the country's most exciting wine region, known for old-vine Chenin Blanc, Rhône varieties, and natural winemaking. Hot, dry climate with granitic soils." },
-  { id: 140, question: "Hermitage is exclusively planted with:", options: ["Grenache", "Syrah (with small amounts of white grapes permitted)", "Mourvèdre", "Cinsaut"], correct: 1, explanation: "Hermitage in the Northern Rhône is 100% Syrah for reds, though up to 15% white grapes (Marsanne, Roussanne) may be co-fermented. These are France's most powerful Syrahs." },
-  { id: 141, question: "What is the Uco Valley known for in Argentina?", options: ["Coastal white wines", "High-altitude Malbec", "Sparkling wine production", "Port-style wines"], correct: 1, explanation: "The Uco Valley at 900-1,500m elevation produces Argentina's most refined Malbecs, with greater freshness and elegance than lower Mendoza sites. Also excellent for Chardonnay and Pinot Noir." },
+  // 140 - Target: D (3)
+  { id: 140, question: "Hermitage is exclusively planted with:", options: ["Grenache", "Mourvèdre", "Cinsaut", "Syrah (with small amounts of white grapes permitted)"], correct: 3, explanation: "Hermitage in the Northern Rhône is 100% Syrah for reds, though up to 15% white grapes (Marsanne, Roussanne) may be co-fermented. These are France's most powerful Syrahs." },
+
+  // 141 - Target: A (0)
+  { id: 141, question: "What is the Uco Valley known for in Argentina?", options: ["High-altitude Malbec", "Coastal white wines", "Sparkling wine production", "Port-style wines"], correct: 0, explanation: "The Uco Valley at 900-1,500m elevation produces Argentina's most refined Malbecs, with greater freshness and elegance than lower Mendoza sites. Also excellent for Chardonnay and Pinot Noir." },
+  // 142 - Target: B (1)
   { id: 142, question: "Stellenbosch in South Africa is primarily known for:", options: ["Pinotage and Chenin Blanc only", "Bordeaux-style reds and quality across varieties", "Sparkling wine exclusively", "Sweet Muscats"], correct: 1, explanation: "Stellenbosch is South Africa's most famous wine region, excelling with Cabernet Sauvignon, Bordeaux blends, and increasingly Syrah. Varied terroirs allow diverse quality production." },
-  { id: 143, question: "What characterizes wines from Finger Lakes, New York?", options: ["Full-bodied reds from warm climate", "Cool-climate Riesling and aromatic whites", "Exclusively sparkling wines", "Fortified wine production"], correct: 1, explanation: "New York's Finger Lakes is a cool-climate region producing excellent Riesling (dry to sweet), Gewürztraminer, and sparkling wines. Deep lakes moderate temperatures." },
-  { id: 144, question: "Ribera del Duero wines are made primarily from:", options: ["Garnacha", "Tempranillo (locally called Tinto Fino)", "Mencía", "Monastrell"], correct: 1, explanation: "Ribera del Duero is known for powerful Tempranillo (called Tinto Fino or Tinta del País locally), producing structured, age-worthy reds. Extreme continental climate creates intensity." },
-  { id: 145, question: "The Margaret River is Australia's premier region for:", options: ["Shiraz", "Riesling", "Cabernet Sauvignon and Chardonnay", "Fortified wines"], correct: 2, explanation: "Margaret River's Mediterranean climate produces elegant Cabernet Sauvignon (often Bordeaux-style blends) and refined Chardonnay. It's one of Australia's most prestigious regions." },
+  // 143 - Target: C (2)
+  { id: 143, question: "What characterizes wines from Finger Lakes, New York?", options: ["Full-bodied reds from warm climate", "Exclusively sparkling wines", "Cool-climate Riesling and aromatic whites", "Fortified wine production"], correct: 2, explanation: "New York's Finger Lakes is a cool-climate region producing excellent Riesling (dry to sweet), Gewürztraminer, and sparkling wines. Deep lakes moderate temperatures." },
+  // 144 - Target: D (3)
+  { id: 144, question: "Ribera del Duero wines are made primarily from:", options: ["Garnacha", "Mencía", "Monastrell", "Tempranillo (locally called Tinto Fino)"], correct: 3, explanation: "Ribera del Duero is known for powerful Tempranillo (called Tinto Fino or Tinta del País locally), producing structured, age-worthy reds. Extreme continental climate creates intensity." },
+
+  // 145 - Target: A (0)
+  { id: 145, question: "The Margaret River is Australia's premier region for:", options: ["Cabernet Sauvignon and Chardonnay", "Shiraz", "Riesling", "Fortified wines"], correct: 0, explanation: "Margaret River's Mediterranean climate produces elegant Cabernet Sauvignon (often Bordeaux-style blends) and refined Chardonnay. It's one of Australia's most prestigious regions." },
+  // 146 - Target: B (1)
   { id: 146, question: "What is special about Wachau's classification system?", options: ["It mirrors Burgundy exactly", "Steinfeder, Federspiel, and Smaragd indicate body/ripeness levels", "It classifies by color only", "There is no classification"], correct: 1, explanation: "Wachau uses three categories: Steinfeder (light, max 11.5%), Federspiel (medium, 11.5-12.5%), and Smaragd (full, 12.5%+). Named after lizards found in vineyards." },
-  { id: 147, question: "Colchagua Valley in Chile is famous for:", options: ["Cool-climate Sauvignon Blanc", "Carménère and Cabernet Sauvignon", "Pinot Noir", "Sparkling wines"], correct: 1, explanation: "Colchagua is one of Chile's warmest valleys, producing bold Carménère, ripe Cabernet Sauvignon, and Syrah. Part of the larger Rapel Valley region." },
-  { id: 148, question: "Central Otago, New Zealand is the world's most:", options: ["Northerly wine region", "Southerly wine region", "Largest wine region", "Oldest wine region"], correct: 1, explanation: "Central Otago at 45°S latitude is the world's southernmost major wine region. Its continental climate produces distinctive Pinot Noir with intense color and fruit." },
-  { id: 149, question: "Which Portuguese region is known for age-worthy red wines from Baga grape?", options: ["Douro", "Bairrada", "Alentejo", "Vinho Verde"], correct: 1, explanation: "Bairrada produces tannic, age-worthy reds from Baga grape, traditionally paired with local suckling pig. Modern producers are taming the tannins while preserving structure." },
-  { id: 150, question: "The Côtes du Rhône appellation covers:", options: ["Only the Northern Rhône", "Only the Southern Rhône", "Both Northern and Southern Rhône", "The Loire Valley"], correct: 2, explanation: "Côtes du Rhône is a broad appellation covering both Northern and Southern Rhône, though most production comes from the south. It's predominantly Grenache-based blends." },
-  { id: 151, question: "What is the difference between NV and Vintage Champagne?", options: ["There is no difference", "NV blends multiple years; Vintage is from a single declared year", "Vintage uses different grapes", "NV is always sweeter"], correct: 1, explanation: "Non-Vintage (NV) Champagne blends wines from multiple years for house consistency. Vintage Champagne comes from a single declared year (only made in exceptional vintages) and ages longer." },
-  { id: 152, question: "Crémant wines are:", options: ["Sweet dessert wines", "Traditional method sparkling wines from regions outside Champagne", "Still rosé wines", "Fortified wines"], correct: 1, explanation: "Crémant designates traditional method sparkling wines from French regions outside Champagne (Crémant d'Alsace, de Loire, de Bourgogne, etc.). Made with local grape varieties." },
-  { id: 153, question: "What does 'Brut Nature' mean on a Champagne label?", options: ["Made from organically grown grapes", "Zero dosage added", "Extra-aged Champagne", "Made only from Pinot Noir"], correct: 1, explanation: "Brut Nature (also called Zero Dosage or Non-Dosé) means no sugar was added after disgorgement. These are the driest Champagnes, showing pure, unadorned character." },
+  // 147 - Target: C (2)
+  { id: 147, question: "Colchagua Valley in Chile is famous for:", options: ["Cool-climate Sauvignon Blanc", "Pinot Noir", "Carménère and Cabernet Sauvignon", "Sparkling wines"], correct: 2, explanation: "Colchagua is one of Chile's warmest valleys, producing bold Carménère, ripe Cabernet Sauvignon, and Syrah. Part of the larger Rapel Valley region." },
+  // 148 - Target: D (3)
+  { id: 148, question: "Central Otago, New Zealand is the world's most:", options: ["Northerly wine region", "Largest wine region", "Oldest wine region", "Southerly wine region"], correct: 3, explanation: "Central Otago at 45°S latitude is the world's southernmost major wine region. Its continental climate produces distinctive Pinot Noir with intense color and fruit." },
+
+  // 149 - Target: A (0)
+  { id: 149, question: "Which Portuguese region is known for age-worthy red wines from Baga grape?", options: ["Bairrada", "Douro", "Alentejo", "Vinho Verde"], correct: 0, explanation: "Bairrada produces tannic, age-worthy reds from Baga grape, traditionally paired with local suckling pig. Modern producers are taming the tannins while preserving structure." },
+  // 150 - Target: B (1)
+  { id: 150, question: "The Côtes du Rhône appellation covers:", options: ["Only the Northern Rhône", "Both Northern and Southern Rhône", "Only the Southern Rhône", "The Loire Valley"], correct: 1, explanation: "Côtes du Rhône is a broad appellation covering both Northern and Southern Rhône, though most production comes from the south. It's predominantly Grenache-based blends." },
+  // 151 - Target: C (2)
+  { id: 151, question: "What is the difference between NV and Vintage Champagne?", options: ["There is no difference", "Vintage uses different grapes", "NV blends multiple years; Vintage is from a single declared year", "NV is always sweeter"], correct: 2, explanation: "Non-Vintage (NV) Champagne blends wines from multiple years for house consistency. Vintage Champagne comes from a single declared year (only made in exceptional vintages) and ages longer." },
+  // 152 - Target: D (3)
+  { id: 152, question: "Crémant wines are:", options: ["Sweet dessert wines", "Still rosé wines", "Fortified wines", "Traditional method sparkling wines from regions outside Champagne"], correct: 3, explanation: "Crémant designates traditional method sparkling wines from French regions outside Champagne (Crémant d'Alsace, de Loire, de Bourgogne, etc.). Made with local grape varieties." },
+
+  // 153 - Target: A (0)
+  { id: 153, question: "What does 'Brut Nature' mean on a Champagne label?", options: ["Zero dosage added", "Made from organically grown grapes", "Extra-aged Champagne", "Made only from Pinot Noir"], correct: 0, explanation: "Brut Nature (also called Zero Dosage or Non-Dosé) means no sugar was added after disgorgement. These are the driest Champagnes, showing pure, unadorned character." },
+  // 154 - Target: B (1)
   { id: 154, question: "Franciacorta sparkling wines are made in:", options: ["France", "Italy (Lombardy)", "Spain", "Germany"], correct: 1, explanation: "Franciacorta in Lombardy is Italy's premier traditional method sparkling wine region. Using Chardonnay, Pinot Noir, and Pinot Bianco, it rivals Champagne in quality." },
-  { id: 155, question: "What style of sparkling wine is Moscato d'Asti?", options: ["Bone dry and high pressure", "Lightly sweet, lightly sparkling (frizzante), and low alcohol", "Fully sparkling and very sweet", "Dry and high alcohol"], correct: 1, explanation: "Moscato d'Asti is gently sparkling (frizzante), lightly sweet, and low in alcohol (5-6%). Made from Muscat, it's aromatic with peach and floral notes. Perfect as a dessert wine or aperitif." },
-  { id: 156, question: "What is the term for the sediment removed from Champagne?", options: ["Dosage", "Lees", "Must", "Flor"], correct: 1, explanation: "Lees are the dead yeast cells that settle after second fermentation. Extended lees aging adds complexity (brioche, toast notes). Riddling collects lees in the neck for removal (disgorgement)." },
-  { id: 157, question: "Sekt is a sparkling wine from:", options: ["Italy", "Spain", "Germany and Austria", "Portugal"], correct: 2, explanation: "Sekt is German and Austrian sparkling wine, ranging from tank-method to traditional-method production. Quality Sekt (Winzersekt) from estate-grown Riesling or Pinot can be excellent." },
+  // 155 - Target: C (2)
+  { id: 155, question: "What style of sparkling wine is Moscato d'Asti?", options: ["Bone dry and high pressure", "Fully sparkling and very sweet", "Lightly sweet, lightly sparkling (frizzante), and low alcohol", "Dry and high alcohol"], correct: 2, explanation: "Moscato d'Asti is gently sparkling (frizzante), lightly sweet, and low in alcohol (5-6%). Made from Muscat, it's aromatic with peach and floral notes. Perfect as a dessert wine or aperitif." },
+  // 156 - Target: D (3)
+  { id: 156, question: "What is the term for the sediment removed from Champagne?", options: ["Dosage", "Must", "Flor", "Lees"], correct: 3, explanation: "Lees are the dead yeast cells that settle after second fermentation. Extended lees aging adds complexity (brioche, toast notes). Riddling collects lees in the neck for removal (disgorgement)." },
+
+  // 157 - Target: A (0)
+  { id: 157, question: "Sekt is a sparkling wine from:", options: ["Germany and Austria", "Italy", "Spain", "Portugal"], correct: 0, explanation: "Sekt is German and Austrian sparkling wine, ranging from tank-method to traditional-method production. Quality Sekt (Winzersekt) from estate-grown Riesling or Pinot can be excellent." },
+  // 158 - Target: B (1)
   { id: 158, question: "What distinguishes 'Grower Champagne' from 'Négociant Champagne'?", options: ["Different grapes are used", "Grower Champagne is made by the grape grower themselves", "Négociant is always better quality", "Grower Champagne can't age"], correct: 1, explanation: "Grower Champagne (RM on label) is made by the grape grower. Négociant (NM) houses buy grapes to blend. Growers often showcase individual vineyard character; négociants blend for house style." },
-  { id: 159, question: "English sparkling wine is typically made from:", options: ["Riesling and Gewürztraminer", "Chardonnay, Pinot Noir, and Pinot Meunier", "Albariño and Verdejo", "Muscadet"], correct: 1, explanation: "English sparkling wine uses the same grapes as Champagne (Chardonnay, Pinot Noir, Pinot Meunier) and the traditional method. Climate change and chalk soils similar to Champagne have driven quality." },
-  { id: 160, question: "What does 'Blanc de Noirs' mean?", options: ["White wine from white grapes", "White wine from black (red) grapes", "Red wine from black grapes", "Rosé wine"], correct: 1, explanation: "Blanc de Noirs means 'white from blacks'—white wine made from red grapes (Pinot Noir and/or Pinot Meunier in Champagne). Gentle pressing prevents color extraction." },
-  { id: 161, question: "What distinguishes Manzanilla from Fino Sherry?", options: ["Different grape variety", "Manzanilla is aged in Sanlúcar de Barrameda, giving a saltier character", "Manzanilla is always sweeter", "There is no real difference"], correct: 1, explanation: "Manzanilla is Fino aged in Sanlúcar de Barrameda, where coastal humidity creates thicker flor and gives a distinctive salty, chamomile character. Legally its own DO." },
+  // 159 - Target: C (2)
+  { id: 159, question: "English sparkling wine is typically made from:", options: ["Riesling and Gewürztraminer", "Albariño and Verdejo", "Chardonnay, Pinot Noir, and Pinot Meunier", "Muscadet"], correct: 2, explanation: "English sparkling wine uses the same grapes as Champagne (Chardonnay, Pinot Noir, Pinot Meunier) and the traditional method. Climate change and chalk soils similar to Champagne have driven quality." },
+  // 160 - Target: D (3)
+  { id: 160, question: "What does 'Blanc de Noirs' mean?", options: ["White wine from white grapes", "Red wine from black grapes", "Rosé wine", "White wine from black (red) grapes"], correct: 3, explanation: "Blanc de Noirs means 'white from blacks'—white wine made from red grapes (Pinot Noir and/or Pinot Meunier in Champagne). Gentle pressing prevents color extraction." },
+
+  // 161 - Target: A (0)
+  { id: 161, question: "What distinguishes Manzanilla from Fino Sherry?", options: ["Manzanilla is aged in Sanlúcar de Barrameda, giving a saltier character", "Different grape variety", "Manzanilla is always sweeter", "There is no real difference"], correct: 0, explanation: "Manzanilla is Fino aged in Sanlúcar de Barrameda, where coastal humidity creates thicker flor and gives a distinctive salty, chamomile character. Legally its own DO." },
+  // 162 - Target: B (1)
   { id: 162, question: "Amontillado Sherry begins as:", options: ["Oloroso", "Fino, then continues aging oxidatively", "Pedro Ximénez", "Cream Sherry"], correct: 1, explanation: "Amontillado starts as Fino under flor, then the flor dies (naturally or deliberately) and it ages oxidatively. This creates a unique profile combining both styles—nutty, complex." },
+  // 163 - Target: C (2)
   { id: 163, question: "What grape is used for most Sherry production?", options: ["Pedro Ximénez", "Tempranillo", "Palomino", "Moscatel"], correct: 2, explanation: "Palomino is used for all dry Sherries (Fino, Manzanilla, Amontillado, Oloroso, Palo Cortado). PX and Moscatel are used for sweet styles." },
-  { id: 164, question: "A 20-Year-Old Tawny Port indicates:", options: ["The wine is exactly 20 years old", "An average age of components in the blend is around 20 years", "It was bottled 20 years ago", "The solera is 20 years old"], correct: 1, explanation: "Age-dated Tawnies (10, 20, 30, 40 years) indicate the average age of wines in the blend, approved by tasting panels. They're blends of various vintages for consistent style." },
-  { id: 165, question: "What is Colheita Port?", options: ["Ruby Port aged briefly", "Tawny from a single vintage, aged minimum 7 years in cask", "White Port", "Pink Port"], correct: 1, explanation: "Colheita is single-vintage Tawny Port, aged minimum 7 years in cask (often much longer). The label shows harvest year and bottling date. Unlike Vintage Port, it's ready to drink." },
+  // 164 - Target: D (3)
+  { id: 164, question: "A 20-Year-Old Tawny Port indicates:", options: ["The wine is exactly 20 years old", "It was bottled 20 years ago", "The solera is 20 years old", "An average age of components in the blend is around 20 years"], correct: 3, explanation: "Age-dated Tawnies (10, 20, 30, 40 years) indicate the average age of wines in the blend, approved by tasting panels. They're blends of various vintages for consistent style." },
+
+  // 165 - Target: A (0)
+  { id: 165, question: "What is Colheita Port?", options: ["Tawny from a single vintage, aged minimum 7 years in cask", "Ruby Port aged briefly", "White Port", "Pink Port"], correct: 0, explanation: "Colheita is single-vintage Tawny Port, aged minimum 7 years in cask (often much longer). The label shows harvest year and bottling date. Unlike Vintage Port, it's ready to drink." },
+  // 166 - Target: B (1)
   { id: 166, question: "Bual (Boal) Madeira is:", options: ["The driest style", "Medium-sweet", "Very sweet", "Sparkling"], correct: 1, explanation: "Bual is medium-sweet Madeira, richer than Verdelho but less sweet than Malmsey. It shows caramel, dried fruit, and coffee notes with Madeira's signature acidity." },
-  { id: 167, question: "Which Madeira style is the driest?", options: ["Malmsey", "Bual", "Verdelho", "Sercial"], correct: 3, explanation: "Sercial is the driest Madeira style, with high acidity and almond, citrus, and mineral notes. It works as an aperitif. Malmsey is the sweetest." },
-  { id: 168, question: "What gives Madeira its remarkable longevity?", options: ["High residual sugar only", "The heating process (estufagem) and high acidity", "No oak aging", "Cold stabilization"], correct: 1, explanation: "Madeira's longevity comes from the estufagem (heating) process, which stabilizes the wine, combined with naturally high acidity. Opened bottles last months; aged examples can last centuries." },
-  { id: 169, question: "Rutherglen Muscat is:", options: ["A dry white wine", "A sweet, fortified wine aged in a solera-like system", "A sparkling wine", "An unfortified dessert wine"], correct: 1, explanation: "Rutherglen Muscat is a sweet, fortified wine from Victoria, Australia. Made from Muscat à Petits Grains Rouges, it's aged oxidatively in a solera-like system, developing intense raisined, toffee character." },
+  // 167 - Target: C (2)
+  { id: 167, question: "Which Madeira style is the driest?", options: ["Malmsey", "Bual", "Sercial", "Verdelho"], correct: 2, explanation: "Sercial is the driest Madeira style, with high acidity and almond, citrus, and mineral notes. It works as an aperitif. Malmsey is the sweetest." },
+  // 168 - Target: D (3)
+  { id: 168, question: "What gives Madeira its remarkable longevity?", options: ["High residual sugar only", "No oak aging", "Cold stabilization", "The heating process (estufagem) and high acidity"], correct: 3, explanation: "Madeira's longevity comes from the estufagem (heating) process, which stabilizes the wine, combined with naturally high acidity. Opened bottles last months; aged examples can last centuries." },
+
+  // 169 - Target: A (0)
+  { id: 169, question: "Rutherglen Muscat is:", options: ["A sweet, fortified wine aged in a solera-like system", "A dry white wine", "A sparkling wine", "An unfortified dessert wine"], correct: 0, explanation: "Rutherglen Muscat is a sweet, fortified wine from Victoria, Australia. Made from Muscat à Petits Grains Rouges, it's aged oxidatively in a solera-like system, developing intense raisined, toffee character." },
+  // 170 - Target: B (1)
   { id: 170, question: "Vin Doux Naturel (VDN) is:", options: ["A naturally sweet wine with no fortification", "A fortified wine where spirit is added during fermentation", "A dry wine", "A sparkling wine"], correct: 1, explanation: "Vin Doux Naturel ('naturally sweet wine') is actually fortified—grape spirit is added during fermentation to stop it early, retaining natural grape sugar. Examples include Muscat de Beaumes-de-Venise and Banyuls." },
-  { id: 171, question: "Palo Cortado Sherry is:", options: ["Always sweet", "A rare style combining Amontillado's aromatics with Oloroso's body", "Made under flor throughout aging", "Pink in color"], correct: 1, explanation: "Palo Cortado is a rare, mysterious Sherry that develops Amontillado's delicate, nutty nose but Oloroso's full body. It occurs unpredictably when flor dies unexpectedly on certain wines." },
-  { id: 172, question: "What is a Solera system?", options: ["A type of vine training", "A fractional blending system for consistent aged wine", "A fermentation vessel", "A grape variety"], correct: 1, explanation: "The Solera is a fractional blending system where young wine is added to older barrels in stages, so bottled wine contains elements from the system's inception. Used for Sherry, some Ports, and more." },
-  { id: 173, question: "Marsala comes from:", options: ["Spain", "Portugal", "Sicily, Italy", "France"], correct: 2, explanation: "Marsala is a fortified wine from western Sicily, made in dry to sweet styles. It's classified by color (oro, ambra, rubino), sweetness (secco to dolce), and age (Fine to Vergine)." },
-  { id: 174, question: "Crusted Port is:", options: ["A blend of vintages bottled unfiltered, throwing sediment", "Single vintage Port", "Aged only in cask", "White Port"], correct: 0, explanation: "Crusted Port is a blend of several vintages bottled young without filtration. It throws a 'crust' (sediment) in bottle and develops like Vintage Port but at lower cost. Must age 3+ years in bottle." },
-  { id: 175, question: "What does 'Vendange Tardive' mean in Alsace?", options: ["Early harvest", "Late harvest, resulting in richer, often sweeter wines", "Old vines", "Organic production"], correct: 1, explanation: "Vendange Tardive ('late harvest') in Alsace produces richer wines from grapes picked late with higher sugar. May be dry to sweet. Higher level Sélection de Grains Nobles requires noble rot." },
-  { id: 176, question: "What is 'battonage' commonly used for?", options: ["Adding sweetness to wine", "Stirring lees to add texture to white wines", "Fining red wines", "Carbonating sparkling wines"], correct: 1, explanation: "Bâtonnage (lees stirring) involves stirring settled dead yeast cells back into white wine, adding creamy texture, complexity, and protection from oxidation. Classic for white Burgundy." },
-  { id: 177, question: "What is the difference between fining and filtration?", options: ["There is no difference", "Fining uses agents that bind to particles; filtration physically strains wine", "Filtration is only for red wines", "Fining increases alcohol"], correct: 1, explanation: "Fining uses agents (bentonite, egg whites, etc.) that attract and bind to unwanted particles, which then settle out. Filtration physically strains wine through membranes to remove particles." },
+  // 171 - Target: C (2)
+  { id: 171, question: "Palo Cortado Sherry is:", options: ["Always sweet", "Made under flor throughout aging", "A rare style combining Amontillado's aromatics with Oloroso's body", "Pink in color"], correct: 2, explanation: "Palo Cortado is a rare, mysterious Sherry that develops Amontillado's delicate, nutty nose but Oloroso's full body. It occurs unpredictably when flor dies unexpectedly on certain wines." },
+  // 172 - Target: D (3)
+  { id: 172, question: "What is a Solera system?", options: ["A type of vine training", "A fermentation vessel", "A grape variety", "A fractional blending system for consistent aged wine"], correct: 3, explanation: "The Solera is a fractional blending system where young wine is added to older barrels in stages, so bottled wine contains elements from the system's inception. Used for Sherry, some Ports, and more." },
+
+  // 173 - Target: A (0)
+  { id: 173, question: "Marsala comes from:", options: ["Sicily, Italy", "Spain", "Portugal", "France"], correct: 0, explanation: "Marsala is a fortified wine from western Sicily, made in dry to sweet styles. It's classified by color (oro, ambra, rubino), sweetness (secco to dolce), and age (Fine to Vergine)." },
+  // 174 - Target: B (1)
+  { id: 174, question: "Crusted Port is:", options: ["Single vintage Port", "A blend of vintages bottled unfiltered, throwing sediment", "Aged only in cask", "White Port"], correct: 1, explanation: "Crusted Port is a blend of several vintages bottled young without filtration. It throws a 'crust' (sediment) in bottle and develops like Vintage Port but at lower cost. Must age 3+ years in bottle." },
+  // 175 - Target: C (2)
+  { id: 175, question: "What does 'Vendange Tardive' mean in Alsace?", options: ["Early harvest", "Old vines", "Late harvest, resulting in richer, often sweeter wines", "Organic production"], correct: 2, explanation: "Vendange Tardive ('late harvest') in Alsace produces richer wines from grapes picked late with higher sugar. May be dry to sweet. Higher level Sélection de Grains Nobles requires noble rot." },
+  // 176 - Target: D (3)
+  { id: 176, question: "What is 'battonage' commonly used for?", options: ["Adding sweetness to wine", "Fining red wines", "Carbonating sparkling wines", "Stirring lees to add texture to white wines"], correct: 3, explanation: "Bâtonnage (lees stirring) involves stirring settled dead yeast cells back into white wine, adding creamy texture, complexity, and protection from oxidation. Classic for white Burgundy." },
+
+  // 177 - Target: A (0)
+  { id: 177, question: "What is the difference between fining and filtration?", options: ["Fining uses agents that bind to particles; filtration physically strains wine", "There is no difference", "Filtration is only for red wines", "Fining increases alcohol"], correct: 0, explanation: "Fining uses agents (bentonite, egg whites, etc.) that attract and bind to unwanted particles, which then settle out. Filtration physically strains wine through membranes to remove particles." },
+  // 178 - Target: B (1)
   { id: 178, question: "Micro-oxygenation is used to:", options: ["Add carbonation", "Soften tannins and develop wine similarly to barrel aging", "Increase acidity", "Remove alcohol"], correct: 1, explanation: "Micro-oxygenation (micro-ox) introduces tiny amounts of oxygen to wine in tank, softening tannins and developing complexity similar to barrel aging but faster. Used for wines not aged in barrel." },
-  { id: 179, question: "What is the purpose of 'pigeage'?", options: ["Adding sugar to must", "Punching down the cap of grape skins during red wine fermentation", "Filtering wine", "Adding oak chips"], correct: 1, explanation: "Pigeage (punch-down) breaks up the cap of grape skins that floats on fermenting red wine, increasing extraction of color, tannin, and flavor. Alternative to remontage (pump-over)." },
-  { id: 180, question: "Cold soaking (macération à froid) is used to:", options: ["Stop fermentation", "Extract color and fruit flavors before fermentation", "Reduce alcohol", "Increase tannin only"], correct: 1, explanation: "Cold soaking holds crushed red grapes at cold temperature before fermentation begins, extracting color and fresh fruit flavors without excessive tannin. Popular for Pinot Noir." },
-  { id: 181, question: "What does 'saignée' mean in rosé production?", options: ["Adding red wine to white", "Bleeding off juice early from a red wine fermentation", "Blending finished wines", "Short maceration only"], correct: 1, explanation: "Saignée ('bleeding') draws off pink juice early from a red wine fermentation. This concentrates the remaining red wine while producing rosé as a byproduct. An alternative to direct pressing." },
+  // 179 - Target: C (2)
+  { id: 179, question: "What is the purpose of 'pigeage'?", options: ["Adding sugar to must", "Filtering wine", "Punching down the cap of grape skins during red wine fermentation", "Adding oak chips"], correct: 2, explanation: "Pigeage (punch-down) breaks up the cap of grape skins that floats on fermenting red wine, increasing extraction of color, tannin, and flavor. Alternative to remontage (pump-over)." },
+  // 180 - Target: D (3)
+  { id: 180, question: "Cold soaking (macération à froid) is used to:", options: ["Stop fermentation", "Reduce alcohol", "Increase tannin only", "Extract color and fruit flavors before fermentation"], correct: 3, explanation: "Cold soaking holds crushed red grapes at cold temperature before fermentation begins, extracting color and fresh fruit flavors without excessive tannin. Popular for Pinot Noir." },
+
+  // 181 - Target: A (0)
+  { id: 181, question: "What does 'saignée' mean in rosé production?", options: ["Bleeding off juice early from a red wine fermentation", "Adding red wine to white", "Blending finished wines", "Short maceration only"], correct: 0, explanation: "Saignée ('bleeding') draws off pink juice early from a red wine fermentation. This concentrates the remaining red wine while producing rosé as a byproduct. An alternative to direct pressing." },
+  // 182 - Target: B (1)
   { id: 182, question: "Skin contact (maceration) for white wines:", options: ["Is never done", "Can add texture, color, and phenolic complexity (as in orange wines)", "Always creates defects", "Reduces aromatics"], correct: 1, explanation: "Extended skin contact for whites creates 'orange wines' with amber color, tannic grip, and complex flavors. Traditional in Georgia (qvevri wines) and increasingly popular globally." },
-  { id: 183, question: "What is the purpose of chaptalisation?", options: ["Adding acid", "Adding sugar to increase potential alcohol", "Adding tannin", "Reducing alcohol"], correct: 1, explanation: "Chaptalization adds sugar to must before/during fermentation to increase alcohol in cool vintages. Banned in warm regions (unnecessary) and some quality designations. Named after Jean-Antoine Chaptal." },
-  { id: 184, question: "Inert gas is used in winemaking to:", options: ["Add bubbles", "Protect wine from oxygen exposure", "Increase fermentation speed", "Add flavor"], correct: 1, explanation: "Inert gases (nitrogen, argon, CO2) blanket wine to prevent oxidation during transfers, storage, and bottling. Essential for preserving fresh, reductive winemaking styles." },
-  { id: 185, question: "What is 'assemblage' in winemaking?", options: ["Grape crushing", "Blending different wines to create the final cuvée", "Fermentation", "Bottling"], correct: 1, explanation: "Assemblage is the art of blending—combining different lots (varieties, vineyards, barrels, vintages) to create a finished wine. Critical in Champagne, Bordeaux, and non-vintage wines." },
+  // 183 - Target: C (2)
+  { id: 183, question: "What is the purpose of chaptalisation?", options: ["Adding acid", "Adding tannin", "Adding sugar to increase potential alcohol", "Reducing alcohol"], correct: 2, explanation: "Chaptalization adds sugar to must before/during fermentation to increase alcohol in cool vintages. Banned in warm regions (unnecessary) and some quality designations. Named after Jean-Antoine Chaptal." },
+  // 184 - Target: D (3)
+  { id: 184, question: "Inert gas is used in winemaking to:", options: ["Add bubbles", "Increase fermentation speed", "Add flavor", "Protect wine from oxygen exposure"], correct: 3, explanation: "Inert gases (nitrogen, argon, CO2) blanket wine to prevent oxidation during transfers, storage, and bottling. Essential for preserving fresh, reductive winemaking styles." },
+
+  // 185 - Target: A (0)
+  { id: 185, question: "What is 'assemblage' in winemaking?", options: ["Blending different wines to create the final cuvée", "Grape crushing", "Fermentation", "Bottling"], correct: 0, explanation: "Assemblage is the art of blending—combining different lots (varieties, vineyards, barrels, vintages) to create a finished wine. Critical in Champagne, Bordeaux, and non-vintage wines." },
+  // 186 - Target: B (1)
   { id: 186, question: "What does VDP in Germany signify?", options: ["A government quality level", "A private association of top estates with strict standards", "A grape variety", "A region"], correct: 1, explanation: "VDP (Verband Deutscher Prädikatsweingüter) is an association of top German estates with their own classification system (Gutswein to Grosses Gewächs), often stricter than legal requirements." },
-  { id: 187, question: "What does 'Classico' mean on an Italian wine label?", options: ["Classic winemaking techniques", "Wine from the original/historic heart of the region", "Aged in wood", "Entry-level wine"], correct: 1, explanation: "Classico indicates wine from the historic core zone of a region—usually the best terroir. Examples: Chianti Classico, Soave Classico, Valpolicella Classico." },
-  { id: 188, question: "What is a 'Cru Bourgeois'?", options: ["A Burgundy classification", "A Médoc classification below the 1855 Grands Crus", "A Champagne vineyard", "An Italian designation"], correct: 1, explanation: "Cru Bourgeois is a Médoc classification for quality estates not included in the 1855 Classification. Updated regularly, with levels Cru Bourgeois, Supérieur, and Exceptionnel." },
-  { id: 189, question: "What does 'Superiore' mean on Italian wine labels?", options: ["Organic wine", "Higher alcohol and/or longer aging than basic version", "Sparkling wine", "From a specific vineyard"], correct: 1, explanation: "Superiore typically indicates wine with slightly higher minimum alcohol and/or longer aging requirements than the basic DOC/DOCG. Examples: Valpolicella Superiore, Barbera d'Asti Superiore." },
-  { id: 190, question: "AVA (American Viticultural Area) guarantees:", options: ["Wine quality", "Specific winemaking practices", "Geographic origin only", "Grape varieties used"], correct: 2, explanation: "AVAs define grape-growing regions based on geography, climate, and soil—not grape variety or winemaking. They only guarantee origin, unlike European appellations which regulate more." },
+  // 187 - Target: C (2)
+  { id: 187, question: "What does 'Classico' mean on an Italian wine label?", options: ["Classic winemaking techniques", "Aged in wood", "Wine from the original/historic heart of the region", "Entry-level wine"], correct: 2, explanation: "Classico indicates wine from the historic core zone of a region—usually the best terroir. Examples: Chianti Classico, Soave Classico, Valpolicella Classico." },
+  // 188 - Target: D (3)
+  { id: 188, question: "What is a 'Cru Bourgeois'?", options: ["A Burgundy classification", "A Champagne vineyard", "An Italian designation", "A Médoc classification below the 1855 Grands Crus"], correct: 3, explanation: "Cru Bourgeois is a Médoc classification for quality estates not included in the 1855 Classification. Updated regularly, with levels Cru Bourgeois, Supérieur, and Exceptionnel." },
+
+  // 189 - Target: A (0)
+  { id: 189, question: "What does 'Superiore' mean on Italian wine labels?", options: ["Higher alcohol and/or longer aging than basic version", "Organic wine", "Sparkling wine", "From a specific vineyard"], correct: 0, explanation: "Superiore typically indicates wine with slightly higher minimum alcohol and/or longer aging requirements than the basic DOC/DOCG. Examples: Valpolicella Superiore, Barbera d'Asti Superiore." },
+  // 190 - Target: B (1)
+  { id: 190, question: "AVA (American Viticultural Area) guarantees:", options: ["Wine quality", "Geographic origin only", "Specific winemaking practices", "Grape varieties used"], correct: 1, explanation: "AVAs define grape-growing regions based on geography, climate, and soil—not grape variety or winemaking. They only guarantee origin, unlike European appellations which regulate more." },
+  // 191 - Target: C (2)
   { id: 191, question: "What temperature should light-bodied white wines be served?", options: ["18-20°C", "14-16°C", "7-10°C", "0-4°C"], correct: 2, explanation: "Light, aromatic whites are best at 7-10°C. Warmer temperatures make them seem flabby; too cold mutes aromatics. Fuller whites can be served slightly warmer (10-13°C)." },
-  { id: 192, question: "Why should very old wines be stood upright before serving?", options: ["To warm them up", "To allow sediment to settle to the bottom for easier decanting", "To increase oxidation", "There is no reason"], correct: 1, explanation: "Standing old bottles upright for 24-48 hours lets sediment settle to the bottom, making decanting easier and cleaner. The wine can then be poured off the sediment carefully." },
-  { id: 193, question: "Which wines generally benefit LEAST from decanting?", options: ["Young, tannic reds", "Old wines with sediment", "Light, delicate aged white wines", "Full-bodied, oaky reds"], correct: 2, explanation: "Delicate aged whites can deteriorate quickly with oxygen exposure. They're best served directly from bottle. Young, tannic reds and old reds (for sediment) benefit most from decanting." },
+  // 192 - Target: D (3)
+  { id: 192, question: "Why should very old wines be stood upright before serving?", options: ["To warm them up", "To increase oxidation", "There is no reason", "To allow sediment to settle to the bottom for easier decanting"], correct: 3, explanation: "Standing old bottles upright for 24-48 hours lets sediment settle to the bottom, making decanting easier and cleaner. The wine can then be poured off the sediment carefully." },
+
+  // 193 - Target: A (0)
+  { id: 193, question: "Which wines generally benefit LEAST from decanting?", options: ["Light, delicate aged white wines", "Young, tannic reds", "Old wines with sediment", "Full-bodied, oaky reds"], correct: 0, explanation: "Delicate aged whites can deteriorate quickly with oxygen exposure. They're best served directly from bottle. Young, tannic reds and old reds (for sediment) benefit most from decanting." },
+  // 194 - Target: B (1)
   { id: 194, question: "Umami-rich foods pair best with wines that have:", options: ["High tannin", "Low tannin and/or fruity sweetness", "High acidity only", "No oak influence"], correct: 1, explanation: "Umami (found in aged cheese, mushrooms, soy sauce) can make tannic wines taste bitter. Better matches are fruity, low-tannin wines, or those with slight sweetness." },
-  { id: 195, question: "What is 'bridging' in food and wine pairing?", options: ["Using a sauce to connect wine and protein", "Using an ingredient that links flavors in both food and wine", "Serving wine in a bridge glass", "A specific pouring technique"], correct: 1, explanation: "Bridging uses shared flavor elements (herbs, mushrooms, fruit reductions) to connect wine and food. Example: mushroom sauce bridges Pinot Noir's earthy notes with beef." },
-  { id: 196, question: "Spicy foods typically pair best with:", options: ["High-alcohol, tannic reds", "Off-dry whites or fruity, low-alcohol wines", "Bone-dry, high-acid whites", "Heavily oaked wines"], correct: 1, explanation: "Spicy heat is amplified by alcohol and tannin. Off-dry wines (Riesling, Gewürztraminer) or fruity, lower-alcohol options contrast and cool the palate." },
-  { id: 197, question: "When pairing wine with dessert, the wine should generally be:", options: ["Drier than the dessert", "Sweeter than or as sweet as the dessert", "Any style works equally well", "Red wines only"], correct: 1, explanation: "Dessert wines should match or exceed the dessert's sweetness—otherwise the wine tastes thin and sour. Sauternes with fruit tart, Pedro Ximénez with chocolate." },
-  { id: 198, question: "What does 'GG' (Grosses Gewächs) mean in German wine?", options: ["Grand Cru-equivalent dry wine from top VDP sites", "Sweet wine designation", "Sparkling wine classification", "Entry-level wine"], correct: 0, explanation: "Grosses Gewächs (GG) is VDP's top dry wine classification from Grosse Lage (grand cru) vineyards. These are Germany's finest dry wines, mainly Riesling and Pinot Noir." },
-  { id: 199, question: "What is a 'Lieu-dit' in French wine?", options: ["A type of vine training", "A named vineyard plot, often with historical significance", "A winemaking technique", "A quality designation"], correct: 1, explanation: "Lieu-dit is a named plot of land with local, often historical, significance—smaller than appellation but not necessarily classified. Many represent distinct terroirs." },
-  { id: 200, question: "What does 'Vigneron' mean?", options: ["A grape variety", "A wine merchant", "A grape grower/winemaker", "A sommelier"], correct: 2, explanation: "Vigneron refers to someone who grows grapes and makes wine—combining viticulture and vinification. In France, it implies artisan, estate-based production rather than industrial scale." }
+  // 195 - Target: C (2)
+  { id: 195, question: "What is 'bridging' in food and wine pairing?", options: ["Using a sauce to connect wine and protein", "Serving wine in a bridge glass", "Using an ingredient that links flavors in both food and wine", "A specific pouring technique"], correct: 2, explanation: "Bridging uses shared flavor elements (herbs, mushrooms, fruit reductions) to connect wine and food. Example: mushroom sauce bridges Pinot Noir's earthy notes with beef." },
+  // 196 - Target: D (3)
+  { id: 196, question: "Spicy foods typically pair best with:", options: ["High-alcohol, tannic reds", "Bone-dry, high-acid whites", "Heavily oaked wines", "Off-dry whites or fruity, low-alcohol wines"], correct: 3, explanation: "Spicy heat is amplified by alcohol and tannin. Off-dry wines (Riesling, Gewürztraminer) or fruity, lower-alcohol options contrast and cool the palate." },
+
+  // 197 - Target: A (0)
+  { id: 197, question: "When pairing wine with dessert, the wine should generally be:", options: ["Sweeter than or as sweet as the dessert", "Drier than the dessert", "Any style works equally well", "Red wines only"], correct: 0, explanation: "Dessert wines should match or exceed the dessert's sweetness—otherwise the wine tastes thin and sour. Sauternes with fruit tart, Pedro Ximénez with chocolate." },
+  // 198 - Target: B (1)
+  { id: 198, question: "What does 'GG' (Grosses Gewächs) mean in German wine?", options: ["Sweet wine designation", "Grand Cru-equivalent dry wine from top VDP sites", "Sparkling wine classification", "Entry-level wine"], correct: 1, explanation: "Grosses Gewächs (GG) is VDP's top dry wine classification from Grosse Lage (grand cru) vineyards. These are Germany's finest dry wines, mainly Riesling and Pinot Noir." },
+  // 199 - Target: C (2)
+  { id: 199, question: "What is a 'Lieu-dit' in French wine?", options: ["A type of vine training", "A winemaking technique", "A named vineyard plot, often with historical significance", "A quality designation"], correct: 2, explanation: "Lieu-dit is a named plot of land with local, often historical, significance—smaller than appellation but not necessarily classified. Many represent distinct terroirs." },
+  // 200 - Target: D (3)
+  { id: 200, question: "What does 'Vigneron' mean?", options: ["A grape variety", "A wine merchant", "A sommelier", "A grape grower/winemaker"], correct: 3, explanation: "Vigneron refers to someone who grows grapes and makes wine—combining viticulture and vinification. In France, it implies artisan, estate-based production rather than industrial scale." }
 ];
 
 // Fisher-Yates shuffle algorithm
@@ -704,11 +905,16 @@ export default function App() {
   const ResultsScreen = () => {
     const percentage = Math.round((score / questions.length) * 100);
     
+    // Updated Grading Scale for WSET:
+    // 85%+ = Distinction
+    // 70-84% = Merit
+    // 55-69% = Pass
+    // <55% = Fail
     const getGrade = () => {
-      if (percentage >= 90) return { icon: Trophy, color: 'text-yellow-400', text: 'Outstanding!' };
-      if (percentage >= 75) return { icon: Award, color: 'text-purple-400', text: 'Excellent!' };
-      if (percentage >= 60) return { icon: Medal, color: 'text-blue-400', text: 'Good Job!' };
-      return { icon: Wine, color: 'text-pink-400', text: 'Keep Practicing!' };
+      if (percentage >= 85) return { icon: Trophy, color: 'text-yellow-400', text: 'Distinction', animation: true };
+      if (percentage >= 70) return { icon: Award, color: 'text-purple-400', text: 'Merit', animation: false };
+      if (percentage >= 55) return { icon: Medal, color: 'text-blue-400', text: 'Pass', animation: false };
+      return { icon: XCircle, color: 'text-red-400', text: 'Fail - Keep Practicing', animation: false };
     };
     
     const grade = getGrade();
@@ -725,8 +931,11 @@ export default function App() {
     const winners = getWinner();
     
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-4">
-        <div className="max-w-2xl mx-auto text-center">
+      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-4 relative overflow-hidden">
+        {/* Render confetti only if Distinction achieved */}
+        {gameMode === 'solo' && grade.animation && <Confetti />}
+
+        <div className="max-w-2xl mx-auto text-center relative z-10">
           <Logo />
           
           <div className="mb-8">
@@ -734,9 +943,14 @@ export default function App() {
             <h1 className="text-3xl font-bold text-white mb-2">{grade.text}</h1>
             
             {gameMode === 'solo' ? (
-              <p className="text-xl text-purple-200">
-                You scored {score} out of {questions.length} ({percentage}%)
-              </p>
+              <div className="space-y-2">
+                <p className="text-xl text-purple-200">
+                  You scored {score} out of {questions.length} ({percentage}%)
+                </p>
+                <div className="text-sm text-purple-300">
+                  Passing Grade: 55% | Merit: 70% | Distinction: 85%
+                </div>
+              </div>
             ) : (
               <div>
                 <p className="text-xl text-purple-200 mb-4">
