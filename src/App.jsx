@@ -1,460 +1,932 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Wine, CheckCircle, XCircle, Trophy, Award, Medal, RotateCcw, Play, Sparkles, Users, BookOpen, ChevronLeft, X } from 'lucide-react';
+import { Wine, CheckCircle, XCircle, Trophy, Award, Medal, RotateCcw, Play, Sparkles, Users, BookOpen, ChevronLeft, X, Skull } from 'lucide-react';
 
+// REIGN OF TERROIR Logo Component
+const Logo = () => (
+  <div className="flex items-center justify-center gap-3 mb-6">
+    <span className="text-2xl md:text-3xl font-black tracking-wider text-white" style={{fontFamily: 'Impact, sans-serif', textShadow: '2px 2px 4px rgba(0,0,0,0.5)'}}>REIGN OF</span>
+    <Skull className="w-10 h-10 md:w-12 md:h-12 text-white" />
+    <span className="text-2xl md:text-3xl font-black tracking-wider text-white" style={{fontFamily: 'Impact, sans-serif', textShadow: '2px 2px 4px rgba(0,0,0,0.5)'}}>TERROIR</span>
+  </div>
+);
+
+// Category definitions with question IDs
 const CATEGORIES = {
   all: { name: 'All Topics', ids: null },
-  grapes: { name: 'Grape Varieties', ids: [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30] },
-  regions: { name: 'Wine Regions', ids: [31,32,33,34,35,36,37,38,39,40,86,88,90,93] },
-  sparkling: { name: 'Sparkling & Fortified', ids: [41,42,43,44,45,46,47,48,49,50,51,52,53,54,94,97,98] },
-  production: { name: 'Winemaking', ids: [55,56,57,58,59,60,61,62,99,100] },
-  viticultic: { name: 'Viticulture & Climate', ids: [63,64,65,66,67,68,91,92,95,96] },
-  service: { name: 'Storage, Service & Pairing', ids: [69,70,71,72,73,74,75,76,77,78] },
-  labeling: { name: 'Labels & Classification', ids: [79,80,81,82,83,84,85,87,89] }
+  grapes: { name: 'Grape Varieties', ids: [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,116,117,118,119,120,121,122,123,124,125,126,127,128,129,130] },
+  regions: { name: 'Wine Regions', ids: [31,32,33,34,35,36,37,38,39,40,86,88,90,93,131,132,133,134,135,136,137,138,139,140,141,142,143,144,145,146,147,148,149,150] },
+  sparkling: { name: 'Sparkling Wines', ids: [41,42,43,44,45,46,47,151,152,153,154,155,156,157,158,159,160] },
+  fortified: { name: 'Fortified Wines', ids: [48,49,50,51,52,53,54,94,97,98,161,162,163,164,165,166,167,168,169,170,171,172,173,174,175] },
+  production: { name: 'Winemaking', ids: [55,56,57,58,59,60,61,62,99,100,176,177,178,179,180,181,182,183,184,185] },
+  viticulture: { name: 'Viticulture & Climate', ids: [63,64,65,66,67,68,91,92,95,96] },
+  service: { name: 'Storage, Service & Pairing', ids: [69,70,71,72,73,74,75,76,77,78,191,192,193,194,195,196,197] },
+  labeling: { name: 'Labels & Classification', ids: [79,80,81,82,83,84,85,87,89,186,187,188,189,190,198,199,200] }
 };
 
+// All 200 Questions
 const QUESTIONS = [
+  // ORIGINAL 100 QUESTIONS (IDs 1-100)
   { id: 1, question: "Which grape variety is used to make Meursault?", options: ["Sauvignon Blanc", "Riesling", "Chardonnay", "Pinot Gris"], correct: 2, explanation: "Meursault is a prestigious village in Burgundy's Côte de Beaune, where 100% Chardonnay is used for white wines. These wines are typically full-bodied with stone fruit flavors and often show oak influence." },
   { id: 2, question: "Youthful Sauvignon Blanc wines typically have flavors of:", options: ["Vanilla, toast, and butter", "Honey, petrol, and dried apricot", "Grass, blossom, and passion fruit", "Smoke, cloves, and coconut"], correct: 2, explanation: "Sauvignon Blanc is an aromatic variety with characteristic herbaceous notes (grass, green bell pepper), citrus, and tropical fruit (passion fruit, gooseberry). Vanilla/toast comes from oak; honey/petrol describes aged Riesling." },
-  { id: 3, question: "Which grape variety can make premium wines in cool, moderate, AND warm climates?", options: ["Chardonnay", "Gewürztraminer", "Riesling", "Pinot Grigio"], correct: 0, explanation: "Chardonnay is exceptionally versatile, producing quality wines across all climate types—from lean, mineral Chablis (cool) to rich, tropical Australian examples (warm). Its neutral character allows winemaking to shape the final style." },
-  { id: 4, question: "Which describes Pinot Grigio delle Venezie DOC?", options: ["Full-bodied, oaked, with tropical fruit", "Dry, light-bodied, with green apple and lemon", "Sweet, floral, with rose and lychee", "Medium-bodied, with butter and toast"], correct: 1, explanation: "Italian Pinot Grigio is typically made in a dry, light-bodied, simple style with crisp acidity and subtle green apple and citrus notes. This contrasts with the richer Pinot Gris style from Alsace." },
-  { id: 5, question: "Which grape variety is known for pronounced aromas of rose, lychee, and Turkish delight?", options: ["Riesling", "Viognier", "Gewürztraminer", "Muscat"], correct: 2, explanation: "Gewürztraminer is highly aromatic with distinctive floral (rose), exotic fruit (lychee), and spice notes. It typically has low acidity and full body, distinguishing it from other aromatic varieties." },
-  { id: 6, question: "Which grape variety is used to make Sancerre?", options: ["Chardonnay", "Chenin Blanc", "Sauvignon Blanc", "Melon de Bourgogne"], correct: 2, explanation: "Sancerre is a prestigious Loire Valley appellation producing 100% Sauvignon Blanc. These wines are crisp, dry, and herbaceous with minerality. Don't confuse with Pouilly-Fuissé, which is Burgundy Chardonnay." },
-  { id: 7, question: "Riesling wines from the Mosel region of Germany are typically:", options: ["Full-bodied with pronounced oak flavors", "Light-bodied with high acidity and floral aromas", "Medium-bodied with low acidity and stone fruit", "Full-bodied with butter and cream notes"], correct: 1, explanation: "Mosel Rieslings are made in the lightest, most delicate style of German Riesling. The cool climate and steep slate slopes produce wines with high acidity, floral aromatics, and citrus character. Riesling is never oaked." },
-  { id: 8, question: "Which statement about Alsace wines is TRUE?", options: ["Chardonnay is the most planted grape variety", "Wines are typically blended from multiple varieties", "Riesling and Gewürztraminer are commonly grown", "Wines are usually aged in new oak barrels"], correct: 2, explanation: "Alsace specializes in aromatic varieties including Riesling, Gewürztraminer, and Pinot Gris. Unlike most French regions, wines are varietally labeled. Chardonnay is not permitted, and oak aging is rarely used." },
-  { id: 9, question: "Which white grape variety retains high acidity even in warm climates?", options: ["Gewürztraminer", "Viognier", "Chenin Blanc", "Pinot Grigio"], correct: 2, explanation: "Chenin Blanc is remarkable for maintaining high natural acidity across all climates, from cool Loire Valley to warm South Africa. This acidity enables production of wines from bone-dry to intensely sweet." },
-  { id: 10, question: "Hunter Valley Semillon is typically characterized by:", options: ["High alcohol and full body", "Low alcohol and high acidity", "Medium sweetness and tropical fruit", "Heavy oak influence and butter notes"], correct: 1, explanation: "Hunter Valley Semillon is picked early to retain acidity, resulting in wines with low alcohol (10-11%) and high acid. These wines age exceptionally well, developing toast and honey notes over time." },
-  { id: 11, question: "Which statement is TRUE for Pinot Noir?", options: ["It produces deeply colored wines with high tannins", "It thrives in warm to hot climates", "It is at its best in cool or moderate climates", "It is typically blended with Cabernet Sauvignon"], correct: 2, explanation: "Pinot Noir is thin-skinned, producing pale to medium-colored wines with low tannins and high acidity. It requires cool to moderate climates and won't ripen properly in hot conditions. Premium examples come from Burgundy, Oregon, and New Zealand." },
-  { id: 12, question: "Which region is renowned for Syrah-based wines?", options: ["Hermitage", "Chianti", "Rioja", "Pomerol"], correct: 0, explanation: "Hermitage is the most prestigious appellation in the Northern Rhône, producing powerful 100% Syrah red wines. The steep granite slopes and continental climate create wines with black pepper, dark fruit, and exceptional aging potential." },
-  { id: 13, question: "Which grape has characteristic aromas of blackcurrant, cedar, and green bell pepper?", options: ["Merlot", "Pinot Noir", "Cabernet Sauvignon", "Grenache"], correct: 2, explanation: "Cabernet Sauvignon is identified by blackcurrant (cassis), herbaceous notes (green bell pepper when less ripe), and cedar from oak aging. Its thick skin produces deeply colored wines with high tannins." },
-  { id: 14, question: "Compared to Cabernet Sauvignon, Merlot typically has:", options: ["Higher tannins and more acidity", "Softer tannins and earlier drinkability", "Deeper color and more aging potential", "More herbaceous flavors and firmer structure"], correct: 1, explanation: "Merlot produces softer, rounder wines with medium tannins that are approachable younger than Cabernet Sauvignon. Typical flavors include red plum and cooked blackberry. Merlot is often blended with Cabernet to soften its structure." },
-  { id: 15, question: "Which pair of regions are famous for premium Syrah/Shiraz?", options: ["Burgundy and Marlborough", "Hermitage and Barossa Valley", "Rioja and Chianti", "Bordeaux and Napa Valley"], correct: 1, explanation: "Hermitage (Northern Rhône) and Barossa Valley (Australia) are the world's most renowned Syrah/Shiraz regions. Hermitage produces elegant, peppery wines while Barossa creates powerful, rich styles with vanilla and chocolate from oak." },
-  { id: 16, question: "What level of tannin do Pinot Noir wines typically have?", options: ["High", "Medium to High", "Low to Medium", "No tannins"], correct: 2, explanation: "Pinot Noir's thin skin produces wines with low to medium tannins, pale color, and red fruit flavors (strawberry, raspberry, cherry). This contrasts sharply with thick-skinned varieties like Cabernet Sauvignon and Nebbiolo." },
-  { id: 17, question: "A full-bodied Australian Shiraz from Barossa Valley would typically show:", options: ["Green bell pepper, mint, and eucalyptus", "Strawberry, earth, and mushroom", "Cooked black fruit, vanilla, and chocolate", "Dried herbs, tar, and rose petals"], correct: 2, explanation: "Warm-climate Barossa Shiraz is full-bodied with soft tannins, showing ripe/cooked black fruit (blackberry, plum), and pronounced oak influence (vanilla, chocolate, coffee). The warm climate produces opulent, concentrated wines." },
-  { id: 18, question: "Which grape variety is dominant on Bordeaux's Left Bank?", options: ["Merlot", "Cabernet Franc", "Cabernet Sauvignon", "Petit Verdot"], correct: 2, explanation: "Bordeaux's Left Bank (Médoc, Graves) is dominated by Cabernet Sauvignon, which thrives on the well-drained gravel soils. The Right Bank (St-Émilion, Pomerol) favors Merlot on its clay and limestone soils." },
-  { id: 19, question: "Which grape variety is used to make Beaujolais?", options: ["Pinot Noir", "Gamay", "Grenache", "Merlot"], correct: 1, explanation: "Gamay is the exclusive red grape of Beaujolais, producing light-bodied, low-tannin wines with vibrant red fruit (cherry, raspberry). Carbonic maceration creates distinctive banana and candy aromas in Beaujolais Nouveau." },
-  { id: 20, question: "What is the main grape variety used in Chianti?", options: ["Nebbiolo", "Montepulciano", "Sangiovese", "Barbera"], correct: 2, explanation: "Sangiovese is the principal grape of Tuscany, used in Chianti, Chianti Classico, and Brunello di Montalcino. It produces medium-bodied wines with high acidity, high tannins, and sour cherry/dried herb flavors." },
-  { id: 21, question: "Barolo DOCG is made from which grape variety?", options: ["Sangiovese", "Nebbiolo", "Barbera", "Corvina"], correct: 1, explanation: "Nebbiolo produces Piedmont's finest wines: Barolo and Barbaresco. Despite pale color, these wines have extremely high tannins and acidity, requiring extended aging. Characteristic aromas include tar, roses, and dried herbs." },
-  { id: 22, question: "Which grape variety would struggle to ripen in a cool climate?", options: ["Riesling", "Pinot Noir", "Grenache", "Chardonnay"], correct: 2, explanation: "Grenache is thin-skinned and requires warm to hot climates to fully ripen. It thrives in Southern Rhône, Spain (as Garnacha), and Australia's Barossa Valley. Cool climates produce unripe, herbaceous flavors." },
-  { id: 23, question: "Which is the most important grape variety in Argentina?", options: ["Carmenère", "Cabernet Sauvignon", "Malbec", "Tannat"], correct: 2, explanation: "Malbec is Argentina's signature grape, particularly from high-altitude Mendoza. It produces deeply colored, full-bodied wines with plush tannins and black fruit flavors. Argentina grows more Malbec than any other country." },
-  { id: 24, question: "Carmenère is most commonly associated with which country?", options: ["Argentina", "Chile", "South Africa", "Australia"], correct: 1, explanation: "Carmenère is Chile's signature grape variety, rediscovered in the 1990s after being confused with Merlot. It produces full-bodied wines with herbaceous notes (green bell pepper), black fruit, and spice." },
-  { id: 25, question: "Which grape variety is used to make Vino Nobile di Montepulciano?", options: ["Montepulciano", "Sangiovese", "Nebbiolo", "Corvina"], correct: 1, explanation: "Vino Nobile di Montepulciano is made from Sangiovese in the town of Montepulciano in Tuscany. The grape called Montepulciano is grown in Abruzzo and makes Montepulciano d'Abruzzo—a completely different wine." },
-  { id: 26, question: "Which grape is used to make Prosecco?", options: ["Pinot Grigio", "Moscato", "Glera", "Garganega"], correct: 2, explanation: "Glera is the principal grape of Prosecco, Italy's popular sparkling wine from Veneto. Prosecco is made using the tank method (Charmat), preserving Glera's fresh, fruity, floral character." },
-  { id: 27, question: "Tempranillo is the dominant grape variety in which Spanish region?", options: ["Rías Baixas", "Priorat", "Rioja", "Jerez"], correct: 2, explanation: "Tempranillo is Spain's most important red grape, dominating Rioja and Ribera del Duero. It produces medium to full-bodied wines with red fruit, leather, and tobacco notes, often aged in American oak." },
-  { id: 28, question: "Which grape variety is most widely planted in South Africa for white wine?", options: ["Sauvignon Blanc", "Chardonnay", "Chenin Blanc", "Riesling"], correct: 2, explanation: "Chenin Blanc (locally called Steen) is South Africa's most planted white variety. Its high acidity and versatility allow production of everything from refreshing dry wines to rich, oak-aged styles to sweet wines." },
-  { id: 29, question: "Albariño is the signature white grape of which Spanish region?", options: ["Rioja", "Rías Baixas", "Ribera del Duero", "Jerez"], correct: 1, explanation: "Albariño is grown in Rías Baixas in Galicia (northwest Spain). The cool, Atlantic-influenced climate produces crisp, aromatic whites with citrus, stone fruit, and saline minerality—ideal with seafood." },
-  { id: 30, question: "Pinotage is a grape variety unique to which country?", options: ["Australia", "New Zealand", "South Africa", "Chile"], correct: 2, explanation: "Pinotage was created in South Africa by crossing Pinot Noir and Cinsaut. It produces distinctive wines with red fruit, smoky, and sometimes coffee/chocolate notes. It remains almost exclusively South African." },
-  { id: 31, question: "Which statement correctly describes Bordeaux?", options: ["Left Bank is Merlot-dominant; Right Bank is Cabernet-dominant", "Left Bank is Cabernet-dominant; Right Bank is Merlot-dominant", "Both banks primarily use Pinot Noir", "White wines dominate production"], correct: 1, explanation: "Left Bank (Médoc, Graves) has gravel soils suited to Cabernet Sauvignon. Right Bank (St-Émilion, Pomerol) has clay/limestone soils better suited to Merlot. About 90% of Bordeaux production is red." },
-  { id: 32, question: "In Burgundy's classification system, which represents the highest quality?", options: ["Bourgogne AOC", "Village wines", "Premier Cru", "Grand Cru"], correct: 3, explanation: "Burgundy's hierarchy from highest to lowest: Grand Cru (top vineyards, ~1% of production) → Premier Cru → Village wines (e.g., Gevrey-Chambertin) → Regional Bourgogne AOC." },
-  { id: 33, question: "Which French region is known for unoaked Chardonnay with mineral and citrus notes?", options: ["Meursault", "Chablis", "Napa Valley", "Côte de Beaune"], correct: 1, explanation: "Chablis produces distinctively lean, mineral Chardonnay. The cool northerly climate and Kimmeridgian limestone soils create wines with high acidity, citrus/green apple flavors, and wet stone minerality. Oak is rarely used." },
-  { id: 34, question: "The Northern Rhône Valley is characterized by:", options: ["Mediterranean climate with Grenache-based blends", "Continental climate with steep slopes and 100% Syrah reds", "Cool climate with Pinot Noir as the main variety", "Warm climate with Cabernet Sauvignon"], correct: 1, explanation: "The Northern Rhône has a continental climate with dramatically steep granite slopes. Red wines are 100% Syrah, producing powerful wines with black pepper and dark fruit. Key appellations include Hermitage and Côte-Rôtie." },
-  { id: 35, question: "Which region produces the most intensely aromatic Sauvignon Blanc?", options: ["Sancerre, France", "Marlborough, New Zealand", "Napa Valley, USA", "Bordeaux, France"], correct: 1, explanation: "Marlborough Sauvignon Blanc is renowned for its intensely aromatic, pungent style with pronounced passion fruit, gooseberry, and cut grass. Cool climate, high sunshine, and distinct diurnal temperature variation create this character." },
-  { id: 36, question: "Which Australian region is most famous for premium Riesling?", options: ["Barossa Valley", "Hunter Valley", "Clare Valley", "Margaret River"], correct: 2, explanation: "Clare Valley and Eden Valley produce Australia's finest Rieslings. Despite warm days, cool nights preserve acidity. These wines are typically dry with lime, floral notes, and develop distinctive petrol character with age." },
-  { id: 37, question: "Which American wine region is known for elegant Pinot Noir similar to Burgundy?", options: ["Napa Valley", "Sonoma County", "Oregon (Willamette Valley)", "Washington State"], correct: 2, explanation: "Oregon's Willamette Valley has a cool, Burgundy-like climate that produces elegant, lower-alcohol Pinot Noir with bright acidity and red fruit character. Napa and most California regions are too warm for this style." },
-  { id: 38, question: "What is distinctive about wine production in Mendoza, Argentina?", options: ["Coastal vineyards at sea level", "High-altitude vineyards that moderate extreme heat", "Cool, rainy climate similar to Burgundy", "Predominantly white wine production"], correct: 1, explanation: "Mendoza's vineyards are planted at high altitude (up to 1,500m), which moderates the warm climate through cooler nighttime temperatures. This allows Malbec to develop intense color and flavor while retaining freshness." },
-  { id: 39, question: "Central Otago in New Zealand is known for which grape variety?", options: ["Sauvignon Blanc", "Chardonnay", "Pinot Noir", "Syrah"], correct: 2, explanation: "Central Otago is the world's southernmost wine region, producing expressive, fruit-forward Pinot Noir. Its continental climate with significant day-night temperature variation creates wines with more ripeness than Marlborough." },
-  { id: 40, question: "Margaret River in Australia is best known for which grape varieties?", options: ["Shiraz and Grenache", "Riesling and Gewürztraminer", "Cabernet Sauvignon and Chardonnay", "Pinot Noir and Pinot Gris"], correct: 2, explanation: "Margaret River's maritime climate produces elegant, premium Cabernet Sauvignon and Chardonnay. The moderate temperatures create wines with more restraint and finesse than warmer Australian regions." },
-  { id: 41, question: "What is the correct order for traditional method sparkling wine production?", options: ["Base wine, dosage, riddling, second fermentation", "Second fermentation, yeast autolysis, disgorgement, dosage", "Disgorgement, second fermentation, dosage, riddling", "Dosage, second fermentation, autolysis, riddling"], correct: 1, explanation: "Traditional method sequence: base wine → second fermentation in bottle → yeast autolysis (lees breakdown) → riddling (moves sediment) → disgorgement (removes sediment) → dosage (sweetness adjustment)." },
-  { id: 42, question: "Which sparkling wine is NOT made using the traditional method?", options: ["Champagne", "Cava", "Prosecco", "Crémant d'Alsace"], correct: 2, explanation: "Prosecco must be made using the tank method (Charmat), where second fermentation occurs in pressurized tanks. This preserves the fresh, fruity, floral character of Glera. Traditional method creates more complex, bready notes." },
-  { id: 43, question: "What is added to base wine to start second fermentation in sparkling wine?", options: ["Grape spirit and sugar", "Sugar and yeast", "Carbon dioxide and yeast", "Sulfites and sugar"], correct: 1, explanation: "The liqueur de tirage (mixture of sugar and yeast) is added to still base wine to trigger second fermentation. Yeast consumes the sugar, producing alcohol and carbon dioxide (the bubbles) trapped in the bottle." },
-  { id: 44, question: "The term 'brut' on a Champagne label indicates:", options: ["Sweet", "Medium-dry", "Dry", "Extra-sweet"], correct: 2, explanation: "Brut is the most common Champagne style, indicating a dry wine with low residual sugar (less than 12g/L). Sweeter styles include Demi-Sec and Doux; drier styles include Extra Brut and Brut Nature." },
-  { id: 45, question: "Extended aging on lees in Champagne creates which flavors?", options: ["Fresh fruit and floral aromas", "Bread, biscuit, and brioche notes", "Green apple and citrus", "Tropical fruit and vanilla"], correct: 1, explanation: "Autolysis (yeast cell breakdown during lees contact) creates distinctive bread, biscuit, toast, and brioche aromas. Champagne must age minimum 15 months on lees (NV) or 3 years (vintage)." },
-  { id: 46, question: "Which grape varieties are used to make Champagne?", options: ["Glera, Pinot Grigio, Moscato", "Chardonnay, Pinot Noir, Pinot Meunier", "Sauvignon Blanc, Sémillon, Muscadelle", "Macabeo, Xarel·lo, Parellada"], correct: 1, explanation: "Champagne uses three main grapes: Chardonnay (white), Pinot Noir (black), and Pinot Meunier (black). 'Blanc de Blancs' uses only Chardonnay; 'Blanc de Noirs' uses only the black grapes. Option D lists Cava grapes." },
-  { id: 47, question: "The tank method of sparkling wine production:", options: ["Creates finer, more persistent bubbles", "Produces complex, toasty, autolytic flavors", "Preserves fresh, fruity, floral aromas", "Is more expensive than traditional method"], correct: 2, explanation: "The tank method (Charmat) produces second fermentation quickly in pressurized tanks, then filters and bottles the wine. This preserves primary fruit aromas and is more economical, ideal for fresh styles like Prosecco." },
-  { id: 48, question: "How does Port become a sweet wine?", options: ["Sugar is added after fermentation", "Fermentation is halted by adding grape spirit", "Late-harvested grapes are used", "The wine is left to oxidize"], correct: 1, explanation: "Port is fortified during fermentation, when grape spirit is added to kill the yeast before all sugar is converted to alcohol. This leaves significant residual sugar. Sherry, by contrast, is fortified after fermentation." },
-  { id: 49, question: "Which Port style has oxidative characters of walnut and caramel?", options: ["Ruby", "LBV", "Vintage", "Tawny"], correct: 3, explanation: "Tawny Port is aged in small barrels, exposing it to oxygen and creating oxidative flavors: toffee, caramel, walnuts, dried fruit. The wine develops a tawny-brown color. Ruby styles preserve fresh fruit character." },
-  { id: 50, question: "The Solera system is used in the production of:", options: ["Port", "Champagne", "Sherry", "Madeira"], correct: 2, explanation: "The Solera system is a fractional blending method unique to Sherry production. Wine is drawn from the oldest barrels (bottom of the solera) and replenished from younger barrels above, ensuring consistent house style." },
-  { id: 51, question: "Which Sherry style is protected from oxidation by a layer of flor?", options: ["Oloroso", "Cream", "Fino", "Pedro Ximénez"], correct: 2, explanation: "Fino Sherry develops under a protective layer of flor (film of yeast) that prevents oxidation. This creates pale, dry wines with almond, bread dough, and yeasty characteristics. Fino is fortified to only 15-15.5% to allow flor survival." },
-  { id: 52, question: "Which grape is primarily used to make dry Sherry?", options: ["Muscat", "Palomino", "Touriga Nacional", "Pedro Ximénez"], correct: 1, explanation: "Palomino is the main grape for dry Sherry styles (Fino, Manzanilla, Amontillado, Oloroso). It produces neutral base wines ideal for the aging process. Pedro Ximénez (PX) is sun-dried to make intensely sweet Sherry." },
-  { id: 53, question: "The main difference between Port and Sherry production is:", options: ["Port uses red grapes; Sherry uses white only", "Port is fortified during fermentation; Sherry after", "Port is always dry; Sherry is always sweet", "Port comes from Spain; Sherry from Portugal"], correct: 1, explanation: "The critical difference: Port is fortified during fermentation (making it naturally sweet), while Sherry is fortified after fermentation is complete (making it initially dry). This is one of the most commonly tested facts." },
-  { id: 54, question: "Which Port style is the most basic, youngest red Port?", options: ["Tawny", "LBV", "Ruby", "Vintage"], correct: 2, explanation: "Ruby Port is the simplest, most affordable style. It's aged briefly in large tanks to preserve fresh, fruity character. Styles increase in complexity: Ruby → Reserve Ruby → LBV → Vintage (and separately, Tawny → Aged Tawny)." },
-  { id: 55, question: "What is the correct sequence for most red winemaking?", options: ["Pressing, alcoholic fermentation", "Pressing, crushing, alcoholic fermentation", "Crushing, pressing, alcoholic fermentation", "Crushing, alcoholic fermentation, pressing"], correct: 3, explanation: "Red winemaking: crush grapes → ferment with skins (for color and tannin extraction) → press to separate wine from skins. White winemaking presses before fermentation. This sequence difference is fundamental." },
-  { id: 56, question: "What is the effect of cool fermentation temperatures on white wine?", options: ["Extracts more color and tannin", "Preserves fresh, fruity, and floral aromas", "Creates butter and cream flavors", "Adds vanilla and spice notes"], correct: 1, explanation: "Cool fermentation (12-22°C) for white and rosé wines preserves volatile aromatic compounds, resulting in fresh fruit and floral aromas. Warm fermentation is used for reds to extract color and tannins from skins." },
-  { id: 57, question: "Malolactic fermentation adds which characteristic to wine?", options: ["Fruity, floral aromas", "Butter and cream flavors", "Green apple and citrus notes", "Petrol and honey aromas"], correct: 1, explanation: "MLF converts sharp malic acid to softer lactic acid, reducing acidity and adding butter, cream, and cheese flavors (from diacetyl). It's standard for red wines and optional for whites where creamier texture is desired." },
-  { id: 58, question: "Which aromas come from oak aging?", options: ["Green apple and citrus", "Strawberry and raspberry", "Vanilla, toast, and coconut", "Petrol and honey"], correct: 2, explanation: "Oak aging imparts vanilla, toast, coconut, cedar, smoke, and spice aromas. New oak provides stronger flavors than old oak. American oak gives more coconut and vanilla; French oak is more subtle with spice notes." },
-  { id: 59, question: "Which wines would typically NOT undergo malolactic fermentation?", options: ["Red Burgundy", "Oaked California Chardonnay", "Marlborough Sauvignon Blanc", "Barolo"], correct: 2, explanation: "MLF is avoided in wines where crisp, fresh acidity is essential to style, such as Sauvignon Blanc, Riesling, and most rosés. All red wines and many premium Chardonnays undergo MLF for softer texture." },
-  { id: 60, question: "Lees contact and bâtonnage add which characteristics to wine?", options: ["Crisp acidity and green fruit", "Deep color and high tannins", "Body, creaminess, and biscuit notes", "Fresh berry fruit and floral aromas"], correct: 2, explanation: "Aging on lees (dead yeast cells) and bâtonnage (lees stirring) add body, creamy texture, and complexity. In sparkling wine, extended lees contact (autolysis) develops bread, biscuit, and brioche character." },
-  { id: 61, question: "What does the pulp of a grape contain?", options: ["Color, tannins, and aroma compounds", "Water and sugar", "Acids and tannins", "Yeast and minerals"], correct: 1, explanation: "Grape pulp contains primarily water and sugar (which ferment into alcohol). Skins provide color, tannins, and many aroma compounds. Seeds contribute harsh tannins. Understanding grape anatomy is fundamental to winemaking." },
-  { id: 62, question: "Which environmental factor generates energy in the vine to produce sugars?", options: ["Water", "Nutrients", "Sunlight", "Carbon dioxide"], correct: 2, explanation: "Sunlight drives photosynthesis, enabling vines to convert CO₂ and water into sugar (stored in grapes). Adequate sunlight is essential for ripening. Excess sugar produces higher-alcohol wines; insufficient sunlight yields unripe, acidic grapes." },
-  { id: 63, question: "A wine region with an average growing season temperature of 17°C is considered:", options: ["Cool climate", "Moderate climate", "Warm climate", "Hot climate"], correct: 1, explanation: "17°C average defines a moderate climate. Cool climates average 14-17°C, moderate 17-18.5°C, and warm 18.5-21°C. This classification affects grape variety suitability, wine body, and flavor profile." },
-  { id: 64, question: "Which latitudes mark the zones where most vineyards are found?", options: ["10-30 degrees north and south", "30-50 degrees north and south", "50-70 degrees north and south", "0-20 degrees north and south"], correct: 1, explanation: "Most quality wine production occurs between 30° and 50° latitude in both hemispheres. These zones provide the temperature range needed for grape cultivation—warm enough to ripen grapes, cool enough to retain acidity." },
-  { id: 65, question: "Which of the following does NOT affect vineyard temperature?", options: ["Altitude", "Ocean currents", "Grape variety", "Slope aspect"], correct: 2, explanation: "Grape variety doesn't affect temperature—temperature affects grape variety suitability. Altitude, ocean currents, slope aspect, latitude, and proximity to water bodies all influence vineyard temperature." },
-  { id: 66, question: "During which stage of grape development does véraison occur?", options: ["Bud break", "Flowering", "Ripening (color change)", "Harvest"], correct: 2, explanation: "Véraison marks the onset of ripening when grapes change color (green to yellow for white; green to purple for red), begin accumulating sugar, and decrease in acidity. It occurs approximately 6-8 weeks before harvest." },
-  { id: 67, question: "High altitude vineyards benefit wine quality because:", options: ["Grapes receive less sunlight", "Cooler temperatures preserve acidity and extend growing season", "More rainfall improves grape hydration", "Lower temperatures prevent grape ripening"], correct: 1, explanation: "High altitude provides cooler temperatures (approximately 0.6°C drop per 100m elevation), which preserves natural acidity, extends the growing season, and allows flavor development. This is crucial in warm regions like Mendoza." },
-  { id: 68, question: "What is the primary effect of a cool climate on wine style?", options: ["Full body, high alcohol, ripe tropical fruit", "Light to medium body, high acidity, citrus and green fruit", "Soft tannins, low acidity, dried fruit", "High tannins, low acidity, cooked fruit"], correct: 1, explanation: "Cool climates produce wines with higher acidity, lower alcohol, lighter body, and flavors of citrus, green apple, and underripe fruit. Warm climates produce riper, fuller-bodied wines with tropical fruit and lower acidity." },
-  { id: 69, question: "What is the ideal storage temperature for wine?", options: ["0-5°C", "10-15°C", "20-25°C", "25-30°C"], correct: 1, explanation: "10-15°C (50-59°F) is ideal for wine storage. This constant, cool temperature slows aging appropriately. Higher temperatures accelerate aging prematurely; temperature fluctuations are particularly damaging." },
-  { id: 70, question: "Why should bottles with cork closures be stored horizontally?", options: ["To maximize storage space", "To keep the cork moist and prevent air ingress", "To allow sediment to settle", "To improve the wine's flavor"], correct: 1, explanation: "Horizontal storage keeps wine in contact with the cork, maintaining cork moisture. A dry cork shrinks, becomes porous, and allows air to enter, oxidizing the wine. Screwcap bottles can be stored vertically." },
-  { id: 71, question: "Cork taint (TCA) in wine is characterized by:", options: ["Excessive sweetness and cloying texture", "Wet cardboard, musty basement, and muted fruit", "Vinegar and nail polish aromas", "Egg and sulfur odors"], correct: 1, explanation: "Cork taint (TCA contamination) produces musty, wet cardboard, damp basement aromas and mutes fruit expression. The wine tastes flat and lifeless. Note: cork debris floating in wine is NOT cork taint." },
-  { id: 72, question: "Which is the correct serving temperature for full-bodied red wines?", options: ["6-10°C (43-50°F)", "10-13°C (50-55°F)", "15-18°C (59-64°F)", "20-25°C (68-77°F)"], correct: 2, explanation: "Full-bodied reds should be served at 15-18°C—cooler than modern room temperature. This allows aromas to develop while preventing alcohol from becoming too prominent. Too warm makes wine taste muddled; too cold makes it harsh." },
-  { id: 73, question: "At what temperature should sparkling wines and sweet wines be served?", options: ["Room temperature (20°C)", "Well chilled (6-10°C)", "Lightly chilled (13-15°C)", "Cellar temperature (15-18°C)"], correct: 1, explanation: "Sparkling and sweet wines are served well chilled (6-10°C). Cold temperature keeps sparkling wines fresh with fine bubbles; it balances sweetness in dessert wines. Over-chilling suppresses aromas." },
-  { id: 74, question: "What effect does umami in food have on wine?", options: ["Makes wine taste smoother and fruitier", "Makes wine taste more bitter and astringent", "Makes wine taste sweeter and softer", "Has no effect on wine"], correct: 1, explanation: "Umami (savory taste in aged cheese, mushrooms, soy sauce) makes wine taste more bitter, astringent, and acidic. This is why high-tannin wines clash with umami-rich foods. Fruity, low-tannin wines pair better." },
-  { id: 75, question: "When pairing wine with sweet desserts, the wine should be:", options: ["Drier than the dessert", "Sweeter than the dessert", "Equal sweetness to the dessert", "Any sweetness level works"], correct: 1, explanation: "Wine must be sweeter than the food, or it will taste thin, bitter, and overly acidic. A dry wine with sweet food is one of the most jarring mismatches. This is why Sauternes pairs with desserts—it's intensely sweet." },
-  { id: 76, question: "Salty foods affect wine by:", options: ["Making wine taste more bitter and astringent", "Making wine taste less bitter and more fruity", "Making wine taste thinner and more acidic", "Having no effect on perception"], correct: 1, explanation: "Salt softens wine, making it taste less bitter, less astringent, and more fruity. This is why salty aged cheeses pair beautifully with tannic red wines—the salt tames the tannins." },
-  { id: 77, question: "Which is the best wine pairing for a tomato-based pasta dish?", options: ["Oaked Chardonnay", "Mosel Riesling", "Chianti (Sangiovese)", "Tannic Barolo"], correct: 2, explanation: "High-acid wines match high-acid foods. Tomatoes are acidic, and Sangiovese (Chianti) has naturally high acidity to complement them. Oaked Chardonnay and tannic Barolo would clash; Riesling lacks the body." },
-  { id: 78, question: "Which structural component is the main factor contributing to body in wine?", options: ["Tannin", "Acidity", "Sugar", "Alcohol"], correct: 3, explanation: "Alcohol is the primary contributor to wine body and mouthfeel. Higher alcohol = fuller body. Tannins add structure and grip; sugar adds sweetness and viscosity; acidity provides freshness—but alcohol determines overall weight." },
-  { id: 79, question: "What does PDO (Protected Designation of Origin) indicate on a wine label?", options: ["Minimum 85% grapes from the stated region", "100% grapes from a specified area with strict rules", "Wine made using organic methods", "Wine suitable for aging"], correct: 1, explanation: "PDO indicates 100% of grapes from the specified area, with strict regulations governing grape varieties, yields, and winemaking methods. PDO represents the highest tier of EU geographic classification." },
-  { id: 80, question: "In Italy, which classification represents the highest quality level?", options: ["IGT", "DOC", "DOCG", "Vino d'Italia"], correct: 2, explanation: "Italy's quality hierarchy from highest to lowest: DOCG (guaranteed and controlled) → DOC (controlled) → IGT (typical geographic indication) → Vino d'Italia (table wine). DOCG wines undergo additional quality testing." },
-  { id: 81, question: "A Spanish wine labeled 'Reserva' from Rioja must have:", options: ["No oak aging", "Minimum 6 months in oak", "Minimum 12 months in oak with 36 months total aging", "Minimum 24 months in oak with 60 months total aging"], correct: 2, explanation: "Rioja Reserva requires at least 12 months in oak and 36 months total aging before release. Gran Reserva requires 24 months in oak and 60 months total. These are legally defined terms in Spain." },
-  { id: 82, question: "In German wine classification, 'Spätlese' indicates:", options: ["Wine made from frozen grapes", "Wine from late-harvested, riper grapes", "Wine from botrytis-affected grapes", "Dry wine only"], correct: 1, explanation: "Spätlese means 'late harvest'—grapes picked after normal harvest with higher sugar levels. The wine may be dry (Trocken), off-dry, or sweet depending on winemaking. It's the second level in the Prädikat hierarchy." },
-  { id: 83, question: "Which German term indicates a dry wine style?", options: ["Spätlese", "Auslese", "Trocken", "Prädikat"], correct: 2, explanation: "Trocken means 'dry' in German. It can appear on any Prädikat level wine (Kabinett Trocken, Spätlese Trocken) to indicate the wine has been fermented to dryness. Halbtrocken means 'off-dry.'" },
-  { id: 84, question: "The term 'Classico' on an Italian wine label indicates:", options: ["The wine has been aged in oak", "Grapes from the original, historic production zone", "Premium quality certification", "The wine is from a single vineyard"], correct: 1, explanation: "Classico denotes the historic, original heartland of a wine region (e.g., Chianti Classico, Soave Classico). These central zones often produce higher-quality wines than the expanded surrounding areas." },
-  { id: 85, question: "What is the minimum vintage requirement for EU wines?", options: ["75% from stated vintage", "85% from stated vintage", "95% from stated vintage", "100% from stated vintage"], correct: 1, explanation: "EU regulations require minimum 85% of wine from the stated vintage year. US wines require 95%. Non-vintage wines (common for Champagne) blend multiple years for consistency." },
-  { id: 86, question: "Which pair is CORRECTLY matched?", options: ["Pouilly-Fumé - Chardonnay", "Pouilly-Fuissé - Sauvignon Blanc", "Sancerre - Sauvignon Blanc", "Chablis - Pinot Grigio"], correct: 2, explanation: "Sancerre = Sauvignon Blanc (Loire Valley). Common confusion: Pouilly-Fumé (Loire, Sauvignon Blanc) vs. Pouilly-Fuissé (Burgundy, Chardonnay). Chablis is 100% Chardonnay." },
-  { id: 87, question: "Which grape is NOT permitted in Champagne?", options: ["Chardonnay", "Pinot Meunier", "Cabernet Sauvignon", "Pinot Noir"], correct: 2, explanation: "Champagne permits seven grape varieties: Chardonnay, Pinot Noir, Pinot Meunier (the main three), plus Arbane, Petit Meslier, Pinot Blanc, and Pinot Gris. Cabernet Sauvignon is a Bordeaux variety and is not permitted in Champagne." },
-  { id: 88, question: "Montepulciano d'Abruzzo is made from which grape?", options: ["Sangiovese", "Montepulciano", "Nebbiolo", "Primitivo"], correct: 1, explanation: "Montepulciano d'Abruzzo uses the Montepulciano grape from Abruzzo. Don't confuse with Vino Nobile di Montepulciano, which uses Sangiovese from the Tuscan town of Montepulciano—completely different wine." },
-  { id: 89, question: "Which sweet wine is NOT affected by botrytis (noble rot)?", options: ["Sauternes", "Tokaji Aszú", "Eiswein", "Trockenbeerenauslese"], correct: 2, explanation: "Eiswein (Icewine) is made from healthy grapes frozen on the vine—no botrytis involvement. The frozen water concentrates sugars. Sauternes, Tokaji, and TBA all rely on botrytis-affected grapes." },
-  { id: 90, question: "Pomerol is located in which wine region?", options: ["Burgundy", "Bordeaux", "Rhône Valley", "Loire Valley"], correct: 1, explanation: "Pomerol is on Bordeaux's Right Bank, famous for Merlot-dominant wines (including Château Pétrus). Don't confuse Right Bank Bordeaux villages (Pomerol, St-Émilion) with Burgundy appellations." },
-  { id: 91, question: "Noble rot requires which weather conditions to develop beneficially?", options: ["Constant rain and cold temperatures", "Hot, dry conditions throughout harvest", "Misty mornings followed by warm, dry afternoons", "Frost followed by rapid thawing"], correct: 2, explanation: "Botrytis cinerea requires humid mornings (allowing fungal growth) and warm, dry afternoons (preventing destructive gray rot). This occurs in Sauternes, Tokaji, and German vineyard sites near rivers." },
-  { id: 92, question: "Which statement about rosé production is TRUE?", options: ["Blending red and white wine is common for still rosé in France", "Rosé is typically aged in new oak barrels", "The saignée method uses juice bled from red wine fermentation", "Rosé must undergo malolactic fermentation"], correct: 2, explanation: "Saignée ('bleeding') draws off pink juice early in red wine fermentation. Blending red and white is prohibited for still rosé in the EU (exception: Champagne rosé). Most rosé avoids oak and MLF to preserve freshness." },
-  { id: 93, question: "Coonawarra in Australia is known for Cabernet Sauvignon with which characteristic?", options: ["Intense tropical fruit and high alcohol", "Mint and eucalyptus notes", "Cooked fruit and chocolate", "Green bell pepper and low tannins"], correct: 1, explanation: "Coonawarra's cool climate and terra rossa soils produce Cabernet Sauvignon with distinctive mint and eucalyptus character, along with blackcurrant and firm structure. This distinguishes it from warmer Australian regions." },
-  { id: 94, question: "What distinguishes Amontillado Sherry from Fino?", options: ["Amontillado is sweeter", "Amontillado has undergone oxidative aging after biological aging", "Amontillado is made from Pedro Ximénez", "Amontillado is aged for less time"], correct: 1, explanation: "Amontillado begins life as Fino under flor protection, but the flor eventually dies, exposing the wine to oxidation. This creates a wine with both biological AND oxidative character—amber color, nutty flavors, drier than Oloroso." },
-  { id: 95, question: "A wine with 'tertiary aromas' would show:", options: ["Fresh fruit and floral notes from the grape", "Butter and vanilla from winemaking", "Mushroom, leather, and forest floor from aging", "Herbaceous and grassy notes"], correct: 2, explanation: "Tertiary aromas develop from bottle aging: mushroom, forest floor, leather, tobacco, earth, dried fruit. Primary aromas come from grapes (fruit, floral); secondary aromas come from winemaking (oak, MLF)." },
-  { id: 96, question: "Why is Gewürztraminer particularly distinctive among white grapes?", options: ["It produces wines with very high acidity", "It has low aromatics and neutral character", "It produces full-bodied wines with low acidity and pronounced aromatics", "It is only grown in cool climates"], correct: 2, explanation: "Gewürztraminer is unique for combining pronounced aromatics (rose, lychee, Turkish delight) with full body and low acidity. Most aromatic varieties have high acidity; Gewürztraminer's low acid and rich texture are distinctive." },
-  { id: 97, question: "Which factor indicates traditional method vs tank method sparkling wine?", options: ["Fresh, simple fruit flavors", "Large, vigorous bubbles", "Bread, toast, and biscuit aromas", "Intense floral aromatics"], correct: 2, explanation: "Traditional method aging on lees (autolysis) creates distinctive bread, toast, biscuit, and brioche aromas from yeast breakdown. Tank method produces fresh fruit character without these complex notes, and typically larger bubbles." },
-  { id: 98, question: "A wine labeled 'Blanc de Blancs' Champagne is made from:", options: ["A blend of red and white grapes", "White Chardonnay grapes only", "Pinot Noir and Pinot Meunier only", "Any white grape variety"], correct: 1, explanation: "'Blanc de Blancs' means 'white from whites'—Champagne made exclusively from Chardonnay (the only permitted white grape). 'Blanc de Noirs' uses only the black grapes Pinot Noir and/or Pinot Meunier." },
-  { id: 99, question: "Which techniques are commonly used to add complexity to premium dry Chardonnay?", options: ["Flor aging and botrytis", "Botrytis and lees stirring", "Lees stirring and barrel fermentation", "Flor aging and barrel fermentation"], correct: 2, explanation: "Premium Chardonnay often uses lees stirring (bâtonnage) and barrel fermentation to add complexity, creaminess, and oak integration. Flor aging is for Sherry; botrytis is for sweet wines—neither applies to dry Chardonnay." },
-  { id: 100, question: "Outstanding-quality red wines that age well typically have:", options: ["Low tannins, low acidity, and light fruit", "Medium tannins, medium acidity, medium fruit", "High tannins, concentrated fruit, and high acidity", "Soft tannins, low acidity, and high sweetness"], correct: 2, explanation: "High tannins, concentrated fruit, and high acidity provide structural components for long aging. Tannins act as preservatives, acidity maintains freshness, and concentrated fruit ensures flavors remain vibrant as wine evolves." }
+  { id: 3, question: "What is the key stylistic difference between Chablis and Côte d'Or white Burgundy?", options: ["Chablis uses Pinot Blanc while Côte d'Or uses Chardonnay", "Chablis typically uses stainless steel or neutral oak while Côte d'Or often uses new oak", "Chablis undergoes MLF while Côte d'Or does not", "Chablis is always sparkling while Côte d'Or is still"], correct: 1, explanation: "Both regions use 100% Chardonnay, but Chablis producers typically ferment and age in stainless steel or neutral oak to preserve the wine's crisp, mineral character, while Côte d'Or (Meursault, Puligny-Montrachet) often uses new oak barrels for a richer, more opulent style." },
+  { id: 4, question: "Which grape variety is known for aromas of lychee and rose?", options: ["Riesling", "Gewürztraminer", "Viognier", "Muscat"], correct: 1, explanation: "Gewürztraminer is highly aromatic with distinctive lychee and rose petal aromas, plus Turkish delight and ginger spice. It typically has low acidity and high alcohol, with deep golden color." },
+  { id: 5, question: "Pinot Grigio from northern Italy is typically:", options: ["Full-bodied with rich tropical flavors", "Light, dry, and neutral with subtle pear notes", "Sweet with high residual sugar", "Deep pink in color"], correct: 1, explanation: "Northern Italian Pinot Grigio (especially from Veneto and Friuli) is made in a light, crisp, neutral style with subtle pear and apple notes. This contrasts with richer Alsace Pinot Gris." },
+  { id: 6, question: "Which of the following is NOT a typical characteristic of Riesling?", options: ["High acidity", "Floral aromas", "Low alcohol potential", "Always dry"], correct: 3, explanation: "Riesling is NOT always dry—it ranges from bone dry to lusciously sweet. It does have high acidity, floral/citrus aromas, and often lower alcohol (especially German styles at 8-12% ABV)." },
+  { id: 7, question: "Sémillon is often blended with Sauvignon Blanc in which region?", options: ["Loire Valley", "Bordeaux", "Marlborough", "Mosel"], correct: 1, explanation: "Bordeaux traditionally blends Sémillon with Sauvignon Blanc for both dry whites (like Pessac-Léognan) and sweet wines (Sauternes). Sémillon adds body, waxy texture, and age-worthiness." },
+  { id: 8, question: "Which statement about Chenin Blanc is TRUE?", options: ["It can only make dry wines", "It is primarily grown in Bordeaux", "It can make dry, off-dry, sweet, and sparkling wines", "It always has low acidity"], correct: 2, explanation: "Chenin Blanc is incredibly versatile, producing dry wines (Savennières), off-dry (Vouvray demi-sec), sweet (Coteaux du Layon), and sparkling (Crémant de Loire). It has naturally high acidity." },
+  { id: 9, question: "At which Prädikat level is botrytis (noble rot) ALWAYS required for production?", options: ["Auslese", "Beerenauslese", "Trockenbeerenauslese", "Eiswein"], correct: 2, explanation: "Trockenbeerenauslese (TBA) is the only Prädikat level where botrytis is absolutely mandatory. TBA wines are made exclusively from individually selected berries severely shriveled by noble rot. While Beerenauslese often features botrytis, it can legally be made from overripe grapes without noble rot. Eiswein requires healthy, frozen grapes—botrytis is actually undesirable as it compromises skin integrity needed for freezing." },
+  { id: 10, question: "Which grape is the most widely planted red variety in the world?", options: ["Merlot", "Pinot Noir", "Cabernet Sauvignon", "Syrah"], correct: 2, explanation: "Cabernet Sauvignon is the world's most planted red grape variety, grown extensively in Bordeaux, California, Chile, Australia, and beyond. It's prized for its structure, aging potential, and consistency." },
+  { id: 11, question: "What are the primary fruit flavors in young Cabernet Sauvignon?", options: ["Strawberry and cherry", "Blackcurrant and black cherry", "Peach and apricot", "Lemon and grapefruit"], correct: 1, explanation: "Cabernet Sauvignon is characterized by blackcurrant (cassis) and black cherry flavors, often with cedar, mint, and bell pepper notes. Red fruit flavors are more typical of Pinot Noir." },
+  { id: 12, question: "Merlot from Pomerol is typically:", options: ["Light-bodied and acidic", "Medium to full-bodied with plum and chocolate notes", "Highly tannic and austere when young", "Always blended with Cabernet Sauvignon"], correct: 1, explanation: "Pomerol Merlot is renowned for its plush, velvety texture with plum, chocolate, and truffle notes. The clay soils produce richer, more concentrated wines than the Left Bank." },
+  { id: 13, question: "Which region is most famous for Pinot Noir?", options: ["Rioja", "Burgundy", "Barossa Valley", "Douro"], correct: 1, explanation: "Burgundy is the spiritual home of Pinot Noir, where it produces some of the world's most sought-after red wines. The region's terroir-focused approach showcases the grape's ability to express site-specific characteristics." },
+  { id: 14, question: "Typical tasting notes for cooler climate Syrah/Shiraz include:", options: ["Jammy fruit and chocolate", "Black pepper, violet, and dark fruit", "Eucalyptus and mint", "Tropical fruit and vanilla"], correct: 1, explanation: "Cool-climate Syrah (Northern Rhône style) shows black pepper, violet, olive, and dark fruit with more structure and elegance. Warm-climate Shiraz (Australian style) tends toward jammy fruit and chocolate." },
+  { id: 15, question: "Grenache is a key grape in wines from:", options: ["Burgundy", "Mosel", "Southern Rhône and Spain", "Champagne"], correct: 2, explanation: "Grenache thrives in warm Mediterranean climates, featuring prominently in Châteauneuf-du-Pape and other Southern Rhône wines, as well as Spanish Garnacha from regions like Priorat and Campo de Borja." },
+  { id: 16, question: "What is distinctive about Tempranillo's flavor profile?", options: ["High acidity with citrus notes", "Leather, tobacco, and cherry with earthy undertones", "Intense floral aromatics", "Always tastes of new oak"], correct: 1, explanation: "Tempranillo is known for savory characteristics including leather, tobacco, dried herbs, and cherry fruit. It's Spain's noble grape, starring in Rioja and Ribera del Duero." },
+  { id: 17, question: "Sangiovese is the primary grape in:", options: ["Barolo", "Chianti", "Amarone", "Valpolicella"], correct: 1, explanation: "Sangiovese is the backbone of Chianti, Brunello di Montalcino, and Vino Nobile di Montepulciano. It shows cherry, herb, and earthy characteristics with firm tannins and high acidity." },
+  { id: 18, question: "Which grape variety is used for Barolo and Barbaresco?", options: ["Sangiovese", "Nebbiolo", "Barbera", "Dolcetto"], correct: 1, explanation: "Nebbiolo produces Italy's most prestigious wines in Piedmont. Despite pale color, it has powerful tannins and develops complex tar, rose, and truffle notes with age." },
+  { id: 19, question: "Gamay is the grape variety used in:", options: ["Côtes du Rhône", "Beaujolais", "Burgundy reds", "Chinon"], correct: 1, explanation: "Gamay is synonymous with Beaujolais, producing fruity, low-tannin wines. Beaujolais Nouveau is released weeks after harvest, while Cru Beaujolais can age for years." },
+  { id: 20, question: "Which statement about Zinfandel is TRUE?", options: ["It is only grown in France", "It can make both powerful reds and sweet pink wines", "It always has low alcohol", "It is the same grape as Merlot"], correct: 1, explanation: "Zinfandel is California's signature grape, making everything from powerful, high-alcohol reds to sweet 'White Zinfandel' rosé. It's genetically identical to Italian Primitivo and Croatian Crljenak." },
+  { id: 21, question: "Malbec has become the signature grape of:", options: ["Chile", "Argentina", "South Africa", "New Zealand"], correct: 1, explanation: "While originally from Cahors, France, Malbec found its true home in Argentina, especially Mendoza. Argentine Malbec is typically riper and more fruit-forward than French versions." },
+  { id: 22, question: "Carménère was originally from which region before becoming associated with Chile?", options: ["Burgundy", "Bordeaux", "Rhône Valley", "Loire Valley"], correct: 1, explanation: "Carménère was a traditional Bordeaux variety nearly wiped out by phylloxera. It was rediscovered in Chile in 1994, where it had been misidentified as Merlot, and is now Chile's signature grape." },
+  { id: 23, question: "Pinotage is a cross between Pinot Noir and:", options: ["Shiraz", "Cinsaut", "Grenache", "Mourvèdre"], correct: 1, explanation: "Pinotage was created in South Africa in 1925 by crossing Pinot Noir with Cinsaut (then called Hermitage). It's now South Africa's signature red grape." },
+  { id: 24, question: "Which grape variety is most associated with New Zealand?", options: ["Chardonnay", "Riesling", "Sauvignon Blanc", "Pinot Gris"], correct: 2, explanation: "Sauvignon Blanc, especially from Marlborough, put New Zealand on the world wine map. The style is intensely aromatic with passion fruit, gooseberry, and herbaceous notes." },
+  { id: 25, question: "Albariño is the signature white grape of:", options: ["Rioja, Spain", "Rías Baixas, Spain", "Douro, Portugal", "Ribera del Duero, Spain"], correct: 1, explanation: "Albariño thrives in the cool, wet climate of Rías Baixas in northwest Spain. It produces aromatic, crisp whites with stone fruit and citrus notes, perfect with seafood." },
+  { id: 26, question: "Grüner Veltliner is the most planted grape variety in:", options: ["Germany", "Austria", "Switzerland", "Hungary"], correct: 1, explanation: "Grüner Veltliner is Austria's signature white grape, producing wines ranging from light and peppery to rich and age-worthy. It's known for white pepper and citrus notes." },
+  { id: 27, question: "Which grape variety is known for developing 'petrol' aromas with age?", options: ["Chardonnay", "Sauvignon Blanc", "Riesling", "Gewürztraminer"], correct: 2, explanation: "Aged Riesling develops a distinctive petrol or kerosene aroma (TDN compound), considered desirable by enthusiasts. This develops most in warmer vintages and with bottle age." },
+  { id: 28, question: "Torrontés is the aromatic white grape of:", options: ["Chile", "Argentina", "Uruguay", "Brazil"], correct: 1, explanation: "Torrontés is Argentina's signature white grape, producing intensely aromatic wines with floral and Muscat-like characteristics. It thrives at high altitude in Salta." },
+  { id: 29, question: "What style of wine is Viognier best known for?", options: ["Light, acidic, and mineral", "Full-bodied with stone fruit and floral aromas", "Sweet dessert wines only", "Sparkling wines"], correct: 1, explanation: "Viognier produces full-bodied, aromatic whites with apricot, peach, and floral notes. It typically has low acidity and is the sole grape in Condrieu in the Northern Rhône." },
+  { id: 30, question: "Mourvèdre is known by what name in Spain?", options: ["Garnacha", "Monastrell", "Tempranillo", "Mencía"], correct: 1, explanation: "Mourvèdre is called Monastrell in Spain, where it's grown extensively in Jumilla and other southeastern regions. It's also a key blending grape in Bandol and Châteauneuf-du-Pape." },
+  { id: 31, question: "Which wine region is located on the Left Bank of Bordeaux?", options: ["Pomerol", "Saint-Émilion", "Médoc", "Fronsac"], correct: 2, explanation: "The Médoc (including Margaux, Pauillac, Saint-Julien, Saint-Estèphe) is on the Left Bank, dominated by Cabernet Sauvignon. The Right Bank (Pomerol, Saint-Émilion) features more Merlot." },
+  { id: 32, question: "The Côte d'Or in Burgundy is divided into:", options: ["Côte de Nuits and Côte de Beaune", "Chablis and Mâconnais", "Côte Chalonnaise and Beaujolais", "Pouilly and Sancerre"], correct: 0, explanation: "The Côte d'Or ('Golden Slope') comprises the Côte de Nuits (primarily red wines) in the north and Côte de Beaune (both red and famous whites) in the south." },
+  { id: 33, question: "Which region is known as the birthplace of Syrah?", options: ["Barossa Valley", "Northern Rhône", "Languedoc", "South Africa"], correct: 1, explanation: "The Northern Rhône, particularly Hermitage and Côte-Rôtie, is considered Syrah's birthplace. These steep granite hillsides produce some of the world's most celebrated Syrah." },
+  { id: 34, question: "Marlborough is famous for which style of wine?", options: ["Full-bodied Chardonnay", "Intense, aromatic Sauvignon Blanc", "Sweet Riesling", "Sparkling wine"], correct: 1, explanation: "Marlborough, New Zealand's largest wine region, revolutionized Sauvignon Blanc with its intensely aromatic, herbaceous style featuring passion fruit and grapefruit." },
+  { id: 35, question: "What type of climate does the Mosel region have?", options: ["Warm and dry", "Cool and continental", "Mediterranean", "Tropical"], correct: 1, explanation: "The Mosel has a cool continental climate, one of Germany's northernmost wine regions. Steep slate slopes and river reflection help ripen Riesling." },
+  { id: 36, question: "Napa Valley is primarily known for which grape variety?", options: ["Pinot Noir", "Merlot", "Cabernet Sauvignon", "Zinfandel"], correct: 2, explanation: "Napa Valley is California's premier Cabernet Sauvignon region, producing powerful, age-worthy wines. The region's warm climate and diverse soils create distinctive styles." },
+  { id: 37, question: "Which of the following is a DOCG wine from Tuscany?", options: ["Barolo", "Amarone", "Brunello di Montalcino", "Soave"], correct: 2, explanation: "Brunello di Montalcino is a prestigious Tuscan DOCG made from 100% Sangiovese (locally called Brunello). Barolo and Amarone are from Piedmont and Veneto respectively." },
+  { id: 38, question: "The Douro Valley is famous for producing:", options: ["Sherry", "Madeira", "Port", "Cava"], correct: 2, explanation: "The Douro Valley in northern Portugal is the home of Port wine. The steep, terraced vineyards along the Douro River also produce excellent unfortified reds." },
+  { id: 39, question: "Rioja wines are typically aged in which type of oak?", options: ["French oak only", "American oak traditionally, increasingly French", "Hungarian oak only", "No oak is used"], correct: 1, explanation: "Rioja traditionally used American oak, giving distinctive coconut and dill notes. Modern producers increasingly use French oak for more subtle influence, or a combination." },
+  { id: 40, question: "Which Australian region is most famous for Shiraz?", options: ["Margaret River", "Yarra Valley", "Barossa Valley", "Tasmania"], correct: 2, explanation: "The Barossa Valley produces Australia's most iconic Shiraz—rich, full-bodied wines with ripe fruit and often eucalyptus notes. Old vines dating to the 1840s contribute to its reputation." },
+  { id: 41, question: "The traditional method for making Champagne involves:", options: ["Fermentation in stainless steel tanks", "Second fermentation in the bottle", "Adding CO2 artificially", "Fermentation in oak barrels only"], correct: 1, explanation: "The traditional method (méthode traditionnelle) involves a second fermentation in bottle, creating bubbles naturally. This is followed by riddling and disgorgement to remove yeast sediment." },
+  { id: 42, question: "What is the term for the process of removing yeast sediment from Champagne?", options: ["Riddling", "Dosage", "Disgorgement", "Lees stirring"], correct: 2, explanation: "Disgorgement (dégorgement) removes the frozen plug of yeast sediment collected in the neck during riddling. The bottle is then topped up with dosage liqueur." },
+  { id: 43, question: "Which of the following is NOT a permitted grape in Champagne?", options: ["Chardonnay", "Pinot Noir", "Pinot Meunier", "Chenin Blanc"], correct: 3, explanation: "Champagne permits three main grapes: Chardonnay, Pinot Noir, and Pinot Meunier. Chenin Blanc is used for sparkling wines in the Loire (Crémant de Loire, Vouvray)." },
+  { id: 44, question: "A Champagne labeled 'Blanc de Blancs' is made from:", options: ["Red grapes only", "White grapes only", "A blend of red and white grapes", "Muscat grapes"], correct: 1, explanation: "Blanc de Blancs means 'white from whites'—made exclusively from white grapes (Chardonnay in Champagne). These wines tend to be lighter and more elegant." },
+  { id: 45, question: "What does 'Brut' indicate on a Champagne label?", options: ["Sweet", "Very dry to dry", "Medium sweet", "No sugar added"], correct: 1, explanation: "Brut indicates a dry style with less than 12g/L residual sugar. It's the most common Champagne style. Extra Brut is drier; Demi-Sec is sweeter." },
+  { id: 46, question: "Prosecco is produced using which method?", options: ["Traditional method", "Tank method (Charmat)", "Ancestral method", "Transfer method"], correct: 1, explanation: "Prosecco uses the tank/Charmat method, where secondary fermentation occurs in large pressurized tanks. This preserves fresh, fruity Glera grape character and is more economical." },
+  { id: 47, question: "Cava is a sparkling wine from which country?", options: ["France", "Italy", "Spain", "Portugal"], correct: 2, explanation: "Cava is Spain's traditional method sparkling wine, primarily from Penedès in Catalonia. It uses local grapes Macabeo, Parellada, and Xarel-lo." },
+  { id: 48, question: "Sherry comes from which region of Spain?", options: ["Rioja", "Jerez", "Ribera del Duero", "Priorat"], correct: 1, explanation: "Sherry comes from the 'Sherry Triangle' around Jerez de la Frontera in Andalucía, southern Spain. The unique solera system and flor yeast create distinctive styles." },
+  { id: 49, question: "What is 'flor' in Sherry production?", options: ["A type of grape", "A layer of yeast that protects wine from oxidation", "A specific vineyard", "A type of oak barrel"], correct: 1, explanation: "Flor is a layer of native yeast that forms on the surface of certain Sherries (Fino, Manzanilla), protecting them from oxygen and creating distinctive tangy, yeasty flavors." },
+  { id: 50, question: "Which Sherry style is the driest?", options: ["Cream Sherry", "Pedro Ximénez", "Fino", "Oloroso"], correct: 2, explanation: "Fino is the driest Sherry style, aged under flor, with tangy, saline, almond notes. Oloroso is dry but richer; Cream and PX are sweet styles." },
+  { id: 51, question: "Port wine is fortified with:", options: ["Brandy during fermentation", "Neutral spirit after fermentation", "Sherry", "Sugar syrup"], correct: 0, explanation: "Port is fortified with grape spirit (aguardente) during fermentation, killing the yeast while residual sugar remains. This creates a sweet, high-alcohol wine (19-22% ABV)." },
+  { id: 52, question: "Which style of Port is aged primarily in bottle?", options: ["Ruby Port", "Tawny Port", "Vintage Port", "White Port"], correct: 2, explanation: "Vintage Port (Vintage/Late Bottled Vintage/Vintage) is aged primarily in bottle after minimal cask time, developing complex flavors over decades. Tawny ages in cask." },
+  { id: 53, question: "Tawny Port gets its color from:", options: ["Red grape skins", "Extended barrel aging causing oxidation", "Addition of caramel", "Blending with white Port"], correct: 1, explanation: "Tawny Port's amber color develops from extended oxidative aging in small barrels. This also creates nutty, caramel, and dried fruit flavors." },
+  { id: 54, question: "Madeira is known for what unique production process?", options: ["Freezing the grapes", "Heating the wine (estufagem)", "Underwater aging", "Adding herbs and spices"], correct: 1, explanation: "Madeira undergoes estufagem (heating) which gives it remarkable longevity and distinctive caramelized, nutty flavors. This process was discovered accidentally during long sea voyages." },
+  { id: 55, question: "Malolactic fermentation converts:", options: ["Sugar to alcohol", "Malic acid to lactic acid", "Alcohol to vinegar", "Lactic acid to malic acid"], correct: 1, explanation: "MLF converts sharp malic acid (green apple) to softer lactic acid (dairy), reducing perceived acidity and adding buttery, creamy notes. Common in red wines and oaked Chardonnay." },
+  { id: 56, question: "What is the purpose of 'lees stirring' (bâtonnage)?", options: ["To clarify the wine", "To add texture and complexity", "To increase alcohol", "To reduce acidity"], correct: 1, explanation: "Bâtonnage involves stirring dead yeast cells (lees) back into wine, adding creamy texture, complexity, and protecting against oxidation. Common in Burgundy Chardonnay." },
+  { id: 57, question: "Oak aging can impart which flavors to wine?", options: ["Citrus and green apple", "Vanilla, toast, and spice", "Petrol and floral notes", "Grass and gooseberry"], correct: 1, explanation: "Oak contributes vanilla, toast, smoke, coconut, clove, and sweet spice flavors. It also adds tannin, allows micro-oxygenation, and impacts texture." },
+  { id: 58, question: "What is carbonic maceration?", options: ["Aging wine underwater", "Whole-bunch fermentation in CO2 atmosphere", "Adding carbon dioxide to still wine", "Fermenting in stainless steel"], correct: 1, explanation: "Carbonic maceration involves fermenting whole, uncrushed grapes in a CO2-filled tank. It produces fruity, low-tannin wines with distinctive bubblegum/banana notes. Classic for Beaujolais Nouveau." },
+  { id: 59, question: "The purpose of fining in winemaking is:", options: ["To add flavor", "To increase alcohol content", "To clarify and stabilize the wine", "To add color"], correct: 2, explanation: "Fining removes unwanted particles, proteins, or phenolics that could cause haziness or off-flavors. Common agents include bentonite (clay), egg whites, and isinglass." },
+  { id: 60, question: "What does 'sur lie' aging mean?", options: ["Aging on the skins", "Aging on the lees (dead yeast cells)", "Aging in new oak", "Aging in bottle"], correct: 1, explanation: "Sur lie means aging wine on its lees (dead yeast cells), adding texture, complexity, and sometimes a slight spritz. Classic for Muscadet Sèvre et Maine." },
+  { id: 61, question: "Cold stabilization is used to:", options: ["Increase alcohol", "Prevent tartrate crystal formation", "Add flavor", "Darken the wine's color"], correct: 1, explanation: "Cold stabilization precipitates tartrate crystals before bottling by chilling wine near freezing. These harmless crystals can form otherwise in refrigerated bottles." },
+  { id: 62, question: "Which statement about stainless steel fermentation is TRUE?", options: ["It always adds oak flavor", "It preserves fresh fruit character", "It is only used for red wines", "It increases tannin"], correct: 1, explanation: "Stainless steel is inert, preserving fresh, primary fruit flavors without adding oak influence. Temperature control is precise, making it ideal for aromatic whites." },
+  { id: 63, question: "What is the effect of a warm climate on grape ripeness?", options: ["Lower sugar, higher acid", "Higher sugar, lower acid", "No effect on sugar or acid", "Lower sugar, lower acid"], correct: 1, explanation: "Warm climates produce riper grapes with higher sugars (thus higher potential alcohol) and lower acidity. Cool climates retain more acidity with lower sugar levels." },
+  { id: 64, question: "Phylloxera is:", options: ["A type of grape", "A vine pest that attacks roots", "A winemaking technique", "A wine region"], correct: 1, explanation: "Phylloxera is a root louse that devastated European vineyards in the late 1800s. The solution was grafting European vines onto resistant American rootstocks." },
+  { id: 65, question: "What is terroir?", options: ["A type of barrel", "The complete natural environment where wine is produced", "A winemaking technique", "A grape variety"], correct: 1, explanation: "Terroir encompasses all environmental factors affecting grape growing: soil, climate, topography, and human tradition. It's why the same grape tastes different in different places." },
+  { id: 66, question: "Continental climate is characterized by:", options: ["Mild winters and cool summers", "Hot, dry conditions year-round", "Warm summers and cold winters", "Constant rainfall"], correct: 2, explanation: "Continental climate has significant temperature variation between seasons—warm to hot summers and cold winters. Examples include Burgundy, Alsace, and parts of Germany." },
+  { id: 67, question: "Which soil type is associated with the best Chablis vineyards?", options: ["Chalk and limestone (Kimmeridgian)", "Granite", "Volcanic", "Sand"], correct: 0, explanation: "Chablis' finest vineyards sit on Kimmeridgian limestone/marl, ancient seabed rich in fossilized oyster shells. This contributes to the wines' distinctive mineral, flinty character." },
+  { id: 68, question: "Why might a winemaker choose to harvest at night?", options: ["It's traditional", "To preserve freshness and acidity in warm climates", "Grapes are sweeter at night", "To avoid insects"], correct: 1, explanation: "Night harvesting in warm climates keeps grapes cool, preventing premature fermentation and preserving fresh flavors and acidity. It also reduces oxidation." },
+  { id: 69, question: "What is the ideal serving temperature for full-bodied red wines?", options: ["4-8°C", "8-12°C", "15-18°C", "Room temperature (20°C+)"], correct: 2, explanation: "Full-bodied reds are best at 15-18°C (60-65°F). Too warm emphasizes alcohol; too cold mutes aromas and accentuates tannins. 'Room temperature' is an outdated term." },
+  { id: 70, question: "Champagne should be served at:", options: ["Room temperature", "6-10°C", "15-18°C", "0-4°C"], correct: 1, explanation: "Champagne is best at 6-10°C (43-50°F). Colder temperatures preserve bubbles and freshness. Vintage Champagnes can be served slightly warmer to show complexity." },
+  { id: 71, question: "Which type of wine glass is best for aromatic white wines?", options: ["A narrow flute", "A wide, shallow bowl", "A medium bowl that tapers at the rim", "Any glass will do"], correct: 2, explanation: "Aromatic whites benefit from glasses with medium bowls that taper at the rim, concentrating aromas while allowing swirling. Too wide disperses aromatics; too narrow restricts them." },
+  { id: 72, question: "Decanting is most beneficial for:", options: ["Young, light white wines", "Old red wines with sediment or young, tannic reds", "All sparkling wines", "Sweet dessert wines"], correct: 1, explanation: "Decanting separates sediment from aged reds and aerates young, tannic wines to soften them. Old wines need gentle decanting; young wines benefit from vigorous aeration." },
+  { id: 73, question: "What causes cork taint in wine?", options: ["Old corks", "TCA (trichloroanisole) contamination", "Improper storage", "Natural cork variation"], correct: 1, explanation: "Cork taint is caused by TCA, a compound formed when fungi in cork interact with chlorine-based compounds. It creates musty, wet cardboard aromas, affecting 1-3% of corked wines." },
+  { id: 74, question: "Wine should ideally be stored:", options: ["Upright in a warm room", "On its side in a cool, dark place", "In the refrigerator long-term", "Near a window for light exposure"], correct: 1, explanation: "Wine stores best on its side (keeping cork moist) in cool (10-15°C), dark, humid conditions with minimal vibration. Light, heat, and dryness damage wine." },
+  { id: 75, question: "High tannin wines pair best with:", options: ["Delicate fish dishes", "Rich, fatty meats", "Spicy Asian cuisine", "Light salads"], correct: 1, explanation: "Tannins bind with proteins and fats, so tannic reds pair excellently with fatty meats (steak, lamb). The fat softens the tannins, creating balance." },
+  { id: 76, question: "Which wine would best complement a creamy pasta dish?", options: ["Tannic Barolo", "Oaked Chardonnay", "Dry Fino Sherry", "Sweet Riesling"], correct: 1, explanation: "Oaked Chardonnay's creamy, buttery texture and moderate acidity complement cream-based dishes. Its weight matches the richness without overwhelming the food." },
+  { id: 77, question: "Sweet wines pair well with:", options: ["Only desserts", "Salty cheeses and foie gras", "Red meat", "Green vegetables"], correct: 1, explanation: "Sweet wines create brilliant contrasts with salty foods (Sauternes with Roquefort, Port with Stilton) and complement rich foie gras. They're not limited to desserts." },
+  { id: 78, question: "Why does Sauvignon Blanc pair well with goat cheese?", options: ["They are from the same region", "The wine's acidity cuts through the cheese's richness", "They have the same color", "No particular reason"], correct: 1, explanation: "Classic pairing: Sauvignon Blanc's high acidity and herbaceous notes complement tangy goat cheese (Sancerre region produces both). Acidity cleanses the palate between bites." },
+  { id: 79, question: "What does 'Grand Cru' mean in Burgundy?", options: ["A large producer", "The highest vineyard classification", "A style of winemaking", "A type of grape"], correct: 1, explanation: "Grand Cru ('great growth') is Burgundy's highest vineyard classification, representing the best terroirs. Only about 1% of Burgundy vineyards hold this status." },
+  { id: 80, question: "In Germany, what does 'Trocken' on a label indicate?", options: ["Sweet wine", "Dry wine", "Sparkling wine", "Late harvest wine"], correct: 1, explanation: "Trocken means 'dry' in German, indicating wines with minimal residual sugar (less than 9g/L). Halbtrocken means 'half-dry' or off-dry." },
+  { id: 81, question: "What is the difference between DOC and DOCG in Italy?", options: ["There is no difference", "DOCG is a higher quality classification than DOC", "DOC is higher than DOCG", "They apply to different regions"], correct: 1, explanation: "DOCG (Denominazione di Origine Controllata e Garantita) is Italy's highest classification, with stricter production rules and tasting approval. DOC is one level below." },
+  { id: 82, question: "AOC/AOP in France guarantees:", options: ["Wine quality", "Geographic origin and production methods", "Grape variety used", "Vintage year"], correct: 1, explanation: "AOC (Appellation d'Origine Contrôlée) / AOP guarantees geographic origin and adherence to regional production rules (grape varieties, yields, methods). It doesn't guarantee quality per se." },
+  { id: 83, question: "What does 'Reserva' mean on a Spanish wine label?", options: ["The winery's best vineyard", "Extended aging before release", "Higher alcohol content", "Organic production"], correct: 1, explanation: "Reserva indicates extended aging: for reds, minimum 3 years with at least 1 year in oak. Gran Reserva requires 5 years minimum with 18 months in oak." },
+  { id: 84, question: "A wine labeled 'Old Vine' or 'Vieilles Vignes' suggests:", options: ["The wine is old", "Grapes from mature, low-yielding vines", "Traditional winemaking", "The winery is historic"], correct: 1, explanation: "Old vines (often 35+ years) produce smaller yields of more concentrated fruit. There's no legal definition, but these wines often show more complexity and depth." },
+  { id: 85, question: "What does 'Estate Bottled' mean?", options: ["Bottled in a castle", "Grapes grown and wine bottled on the same property", "Premium quality designation", "Hand-harvested grapes"], correct: 1, explanation: "Estate Bottled indicates the winery grew the grapes and bottled the wine at their property. It implies control over the entire production process." },
+  { id: 86, question: "Which region is known for producing wine from grapes dried on straw mats?", options: ["Champagne", "Veneto (for Amarone and Recioto)", "Burgundy", "Bordeaux"], correct: 1, explanation: "In Veneto, grapes for Amarone and Recioto undergo appassimento—drying on mats or racks for months to concentrate sugars before fermentation, creating rich, intense wines." },
+  { id: 87, question: "The '1855 Classification' applies to which region?", options: ["Burgundy", "Champagne", "Bordeaux (Médoc and Sauternes)", "Rhône Valley"], correct: 2, explanation: "The 1855 Classification ranked Bordeaux estates for the Paris Exhibition, creating the famous First through Fifth Growth hierarchy for Médoc reds and Sauternes sweet wines." },
+  { id: 88, question: "Clare Valley and Eden Valley in Australia are best known for:", options: ["Shiraz", "Chardonnay", "Riesling", "Cabernet Sauvignon"], correct: 2, explanation: "Clare Valley and Eden Valley produce Australia's finest Rieslings—dry, lime-scented wines with excellent aging potential. The high altitude provides cool nights ideal for this variety." },
+  { id: 89, question: "What does 'Einzellage' mean on a German wine label?", options: ["A region", "A single vineyard site", "A grape variety", "A quality level"], correct: 1, explanation: "Einzellage refers to a single vineyard site in Germany. Premium wines often display the village name followed by the vineyard name (e.g., Wehlener Sonnenuhr)." },
+  { id: 90, question: "The Bekaa Valley is the main wine region of:", options: ["Israel", "Turkey", "Lebanon", "Greece"], correct: 2, explanation: "Lebanon's Bekaa Valley, at 900-1000m altitude between mountain ranges, produces most of the country's wine. Château Musar is the most famous producer." },
+  { id: 91, question: "What is the main effect of altitude on grape growing?", options: ["Higher humidity", "Warmer temperatures at night", "Greater temperature variation and UV exposure", "Less sunlight"], correct: 2, explanation: "High altitude means cooler temperatures (especially at night, preserving acidity), greater diurnal range, more intense UV light (thicker skins), and often reduced disease pressure." },
+  { id: 92, question: "A maritime climate is characterized by:", options: ["Hot summers and cold winters", "Moderate temperatures year-round due to ocean influence", "Very dry conditions", "Extreme temperature swings"], correct: 1, explanation: "Maritime climates have ocean-moderated temperatures—mild winters, cool summers, less extreme variation. Examples include Bordeaux, parts of Chile, and Western Australia." },
+  { id: 93, question: "Santorini is known for which grape variety?", options: ["Agiorgitiko", "Assyrtiko", "Moschofilero", "Xinomavro"], correct: 1, explanation: "Santorini's volcanic soils and unique basket-trained vines (kouloura) produce distinctive Assyrtiko—mineral-driven, high-acid white wines that age remarkably well." },
+  { id: 94, question: "What is Rutherglen famous for?", options: ["Sparkling Shiraz", "Fortified Muscat and Tokay (Muscadelle)", "Pinot Noir", "Dry Riesling"], correct: 1, explanation: "Rutherglen in Victoria, Australia produces lusciously sweet, fortified Muscat and Topaque (formerly Tokay, made from Muscadelle) aged for decades in the solera-style." },
+  { id: 95, question: "What is a diurnal temperature range?", options: ["Temperature difference between seasons", "Temperature difference between day and night", "The average yearly temperature", "Temperature of the soil"], correct: 1, explanation: "Diurnal range is the difference between day and night temperatures. Large diurnal range helps grapes develop flavor while maintaining acidity—common at high altitude and in continental climates." },
+  { id: 96, question: "The 'rain shadow effect' benefits which wine region?", options: ["Champagne", "Mendoza, Argentina", "Mosel, Germany", "Burgundy"], correct: 1, explanation: "Mendoza sits in the rain shadow of the Andes—mountains block Pacific moisture, creating a dry climate ideal for viticulture. Irrigation from Andean snowmelt is essential." },
+  { id: 97, question: "PX (Pedro Ximénez) Sherry is:", options: ["Bone dry", "Made under flor", "Intensely sweet from sun-dried grapes", "Always blended"], correct: 2, explanation: "Pedro Ximénez Sherry is extremely sweet, made from sun-dried PX grapes. It's dark, syrupy, with raisin, fig, and molasses flavors—often used to sweeten other Sherries." },
+  { id: 98, question: "What is LBV Port?", options: ["Light-bodied vintage Port", "Late Bottled Vintage Port, aged 4-6 years in cask", "Limited bottle vintage Port", "Low-budget value Port"], correct: 1, explanation: "Late Bottled Vintage (LBV) Port is aged 4-6 years in cask before bottling—longer than Ruby, shorter than Vintage Port. It's ready to drink with less sediment than Vintage." },
+  { id: 99, question: "Which winemaking technique is used to increase color extraction in red wines?", options: ["Cold fermentation", "Extended maceration", "Malolactic fermentation", "Early bottling"], correct: 1, explanation: "Extended maceration (leaving juice in contact with skins after fermentation) extracts more color, tannin, and flavor compounds. Common for age-worthy reds." },
+  { id: 100, question: "What is whole-bunch fermentation?", options: ["Using only the best grape bunches", "Fermenting grapes with stems included", "Fermenting in large batches", "Using whole berries only"], correct: 1, explanation: "Whole-bunch fermentation includes grape stems during fermentation, adding structure, freshness, and sometimes herbal/spice notes. Popular in Burgundy and increasingly in Rhône and beyond." },
+
+  // NEW 100 QUESTIONS (IDs 101-200)
+  { id: 101, question: "Which characteristic is typical of Pinot Noir from Burgundy?", options: ["Deep, inky color", "High tannin and full body", "Light to medium body with red fruit and earthy notes", "Jammy, overripe fruit flavors"], correct: 2, explanation: "Burgundy Pinot Noir is typically light to medium-bodied with delicate red fruit (cherry, raspberry), floral notes, and earthy/mushroom undertones. It rarely achieves deep color or heavy tannins." },
+  { id: 102, question: "What flavors are characteristic of Cabernet Franc?", options: ["Tropical fruit and honey", "Bell pepper, raspberry, and violet", "Citrus and mineral", "Butter and vanilla"], correct: 1, explanation: "Cabernet Franc is known for its herbaceous character (bell pepper, leafy notes), red fruit (raspberry, strawberry), violet florals, and pencil lead. It's typically lighter than Cabernet Sauvignon." },
+  { id: 103, question: "Vermentino is a white grape variety associated with which regions?", options: ["Burgundy and Champagne", "Sardinia and Provence", "Rioja and Ribera del Duero", "Mosel and Alsace"], correct: 1, explanation: "Vermentino thrives in Mediterranean climates, particularly Sardinia (where it's the signature white) and Provence/Corsica (where it's called Rolle). It produces fresh, citrusy wines with herbal notes." },
+  { id: 104, question: "Which grape variety is Amarone della Valpolicella primarily made from?", options: ["Sangiovese", "Nebbiolo", "Corvina", "Montepulciano"], correct: 2, explanation: "Corvina is the principal grape in Amarone (minimum 45-95%), often blended with Rondinella and Corvinone. These grapes are dried (appassimento) before fermentation." },
+  { id: 105, question: "Verdejo is a white grape variety most associated with:", options: ["Portugal", "Spain's Rueda region", "South Africa", "Argentina"], correct: 1, explanation: "Verdejo is the signature grape of Rueda in northwest Spain. It produces aromatic whites with fennel, citrus, and stone fruit notes, often with slight bitterness on the finish." },
+  { id: 106, question: "What style of wine is Muscadet?", options: ["Sweet and aromatic", "Full-bodied and oaky", "Light, dry, and neutral with mineral notes", "Sparkling"], correct: 2, explanation: "Muscadet (from Melon de Bourgogne) is a light, dry, neutral white from the Loire Valley. Sur lie aging adds texture and slight yeastiness. Perfect with oysters and seafood." },
+  { id: 107, question: "Touriga Nacional is the most prized grape for:", options: ["Rioja wines", "Port and Douro reds", "Chianti", "Champagne"], correct: 1, explanation: "Touriga Nacional is Portugal's finest red grape, essential for premium Port and increasingly important for top Douro table wines. It offers intense color, floral aromatics, and structured tannins." },
+  { id: 108, question: "Which of these grapes is aromatic?", options: ["Chardonnay", "Trebbiano", "Muscat", "Melon de Bourgogne"], correct: 2, explanation: "Muscat is highly aromatic with distinctive grapey, floral, and sweet spice notes. Chardonnay, Trebbiano, and Melon de Bourgogne are considered neutral varieties." },
+  { id: 109, question: "Cinsaut (Cinsault) is commonly used in:", options: ["Burgundy reds", "Southern Rhône blends and South African rosé", "German Riesling blends", "Champagne"], correct: 1, explanation: "Cinsaut is a key blending grape in Southern Rhône and Provence wines, valued for its perfume and softness. In South Africa, it's used for rosé and was crossed with Pinot Noir to create Pinotage." },
+  { id: 110, question: "What distinguishes Pinot Gris from Pinot Grigio?", options: ["They are completely different grapes", "Pinot Gris (Alsace style) is richer and fuller than Pinot Grigio (Italian style)", "Pinot Grigio is always sweeter", "There is no difference"], correct: 1, explanation: "Same grape, different styles: Alsace Pinot Gris is typically richer, fuller-bodied, sometimes with residual sugar and honeyed notes. Italian Pinot Grigio is usually light, crisp, and neutral." },
+  { id: 111, question: "Which statement about Marsanne and Roussanne is correct?", options: ["They are red grape varieties", "They are often blended together in Northern Rhône whites", "They are only grown in Italy", "They require cold climates"], correct: 1, explanation: "Marsanne and Roussanne are white Rhône varieties often blended together. Marsanne adds weight and nuttiness; Roussanne contributes acidity, herbal notes, and elegance." },
+  { id: 112, question: "Nero d'Avola is the most important red grape of:", options: ["Tuscany", "Piedmont", "Sicily", "Lombardy"], correct: 2, explanation: "Nero d'Avola is Sicily's signature red grape, producing wines ranging from easy-drinking to serious, age-worthy reds with dark fruit, spice, and chocolate notes." },
+  { id: 113, question: "What is the key characteristic of Tannat wines?", options: ["Light body and low tannin", "Very high tannin and deep color", "Aromatic and floral", "High residual sugar"], correct: 1, explanation: "Tannat is named for its extremely high tannin content. Native to southwest France (Madiran), it found success in Uruguay. Modern winemaking can tame its astringency." },
+  { id: 114, question: "Aglianico is a red grape grown primarily in:", options: ["Northern Italy", "Southern Italy (Campania and Basilicata)", "Sicily", "Sardinia"], correct: 1, explanation: "Aglianico produces powerful, age-worthy reds in Campania (Taurasi) and Basilicata (Aglianico del Vulture). Often called 'the Barolo of the South' for its structure and complexity." },
+  { id: 115, question: "Which grape variety is associated with orange/amber wines from Georgia?", options: ["Saperavi", "Rkatsiteli", "Both Saperavi and Rkatsiteli", "Mtsvane only"], correct: 1, explanation: "Rkatsiteli is Georgia's most planted white grape, often used for traditional amber wines fermented with extended skin contact in qvevri (clay vessels). Saperavi is the main red grape." },
+  { id: 116, question: "Furmint is the primary grape for:", options: ["Austrian Grüner Veltliner", "Hungarian Tokaji", "German Riesling", "Italian Prosecco"], correct: 1, explanation: "Furmint is the principal grape for Hungary's famous Tokaji Aszú sweet wines. It's susceptible to noble rot and maintains high acidity even at high sugar levels." },
+  { id: 117, question: "Which variety is Côte-Rôtie famous for blending with Syrah?", options: ["Marsanne", "Grenache", "Viognier", "Roussanne"], correct: 2, explanation: "Côte-Rôtie uniquely permits adding up to 20% white Viognier to red Syrah, co-fermented for aromatic lift, perfume, and color stabilization. Few other regions allow this practice." },
+  { id: 118, question: "What is Bobal?", options: ["A Spanish white grape", "A Spanish red grape from Valencia/Utiel-Requena", "A Portuguese grape", "A French grape"], correct: 1, explanation: "Bobal is Spain's third most-planted red grape, concentrated in Valencia's Utiel-Requena region. It produces dark, fruity wines and is increasingly valued for quality production." },
+  { id: 119, question: "Schiava (Vernatsch) is associated with which wine region?", options: ["Tuscany", "Alto Adige/Südtirol", "Veneto", "Piedmont"], correct: 1, explanation: "Schiava is the traditional red grape of Alto Adige in northern Italy. It produces light, fruity, low-tannin wines often compared to Beaujolais in style." },
+  { id: 120, question: "What characterizes Godello wines?", options: ["High tannin and deep color", "Rich, textured whites with stone fruit and mineral notes", "Light, fizzy, and simple", "Always sweet"], correct: 1, explanation: "Godello from Valdeorras and Bierzo in northwest Spain produces rich, textured white wines with stone fruit, citrus, and distinctive mineral character. It's experiencing a quality renaissance." },
+  { id: 121, question: "Petit Verdot is used primarily as:", options: ["A single-variety wine grape", "A blending grape adding color and spice to Bordeaux blends", "A white wine grape", "A sparkling wine grape"], correct: 1, explanation: "Petit Verdot ripens late and is used in small percentages in Bordeaux blends, contributing deep color, violet aromas, and spicy notes. Rarely bottled alone except in warmer regions." },
+  { id: 122, question: "Which grape makes Vinho Verde?", options: ["A single specific grape", "Various grapes including Loureiro and Alvarinho", "Albariño only", "Tempranillo"], correct: 1, explanation: "Vinho Verde is a region, not a grape. It uses various local white grapes including Loureiro (floral), Alvarinho (aromatic, structured), Trajadura, and Arinto." },
+  { id: 123, question: "Blaufränkisch is known in Austria for producing:", options: ["Light, sweet whites", "Medium to full-bodied reds with cherry and spice", "Aromatic sparkling wines", "Dessert wines only"], correct: 1, explanation: "Blaufränkisch (called Lemberger in Germany, Kékfrankos in Hungary) produces serious red wines in Austria's Burgenland with dark cherry, pepper, and minerality." },
+  { id: 124, question: "What is the principal grape in Gavi (Gavi di Gavi)?", options: ["Arneis", "Cortese", "Favorita", "Erbaluce"], correct: 1, explanation: "Cortese is the grape behind Gavi, a crisp, dry white from Piedmont. At its best, it shows citrus, almond, and mineral notes with refreshing acidity." },
+  { id: 125, question: "Mencía is a red grape from:", options: ["Portugal's Douro Valley", "Spain's Bierzo region", "France's Languedoc", "Italy's Piedmont"], correct: 1, explanation: "Mencía is the signature red of Bierzo in northwest Spain (and Ribeira Sacra). It produces fragrant, medium-bodied reds with red fruit, floral, and mineral notes." },
+  { id: 126, question: "Which statement about Carignan (Carignane/Cariñena) is TRUE?", options: ["It's always light and delicate", "Old vine Carignan can produce concentrated, characterful wines", "It's only used for white wines", "It originated in Burgundy"], correct: 1, explanation: "While bulk Carignan can be rustic, old-vine Carignan (especially from Languedoc, Priorat) produces concentrated, complex wines. It was historically the world's most planted variety." },
+  { id: 127, question: "Friulano (formerly Tocai Friulano) is associated with:", options: ["Tuscany", "Friuli-Venezia Giulia", "Sicily", "Lombardy"], correct: 1, explanation: "Friulano is the signature white grape of Friuli in northeast Italy. It produces wines with almond, floral, and herbal notes with a characteristically bitter finish." },
+  { id: 128, question: "What grape is Txakoli (Txakolina) made from?", options: ["Tempranillo", "Hondarrabi Zuri", "Albariño", "Verdejo"], correct: 1, explanation: "Txakoli is a light, slightly spritzy, high-acid white from Spain's Basque Country, primarily from Hondarrabi Zuri grapes. It's traditionally poured from height to aerate." },
+  { id: 129, question: "Assyrtiko is best known for retaining which characteristic?", options: ["Deep color", "High acidity even in hot climates", "High tannin", "Residual sugar"], correct: 1, explanation: "Assyrtiko remarkably maintains high acidity despite Santorini's hot climate and volcanic soils. This makes it age-worthy and food-friendly despite the Mediterranean heat." },
+  { id: 130, question: "What is Pecorino in the wine world?", options: ["A cheese used in wine production", "A white grape from central Italy", "A style of wine from Spain", "A type of oak barrel"], correct: 1, explanation: "Pecorino is a white grape from Marche and Abruzzo in Italy, producing crisp wines with citrus, floral, and mineral notes. The name is unrelated to the cheese (both derive from 'pecora' meaning sheep)." },
+  { id: 131, question: "The Willamette Valley is best known for which grape?", options: ["Cabernet Sauvignon", "Pinot Noir", "Syrah", "Zinfandel"], correct: 1, explanation: "Oregon's Willamette Valley has emerged as one of the world's premier Pinot Noir regions, producing elegant wines with red fruit, earth, and spice. Cool climate and varied soils suit the variety." },
+  { id: 132, question: "What makes Priorat wines distinctive?", options: ["Slate (llicorella) soils and old-vine Garnacha/Cariñena", "Maritime influence and Tempranillo", "Limestone soils and Pinot Noir", "Volcanic soils and Syrah"], correct: 0, explanation: "Priorat's steep llicorella (slate and quartz) soils with old-vine Garnacha and Cariñena produce intense, mineral-driven wines. It's one of only two DOCa regions in Spain." },
+  { id: 133, question: "Which sub-region of Burgundy produces only white wines?", options: ["Côte de Nuits", "Côte de Beaune", "Chablis", "Côte Chalonnaise"], correct: 2, explanation: "Chablis produces exclusively white wines from Chardonnay. The Côte de Nuits is predominantly red; Côte de Beaune and Côte Chalonnaise produce both." },
+  { id: 134, question: "The Casablanca Valley in Chile is known for:", options: ["Warm-climate Cabernet Sauvignon", "Cool-climate whites and Pinot Noir", "Fortified wines", "Traditional method sparkling"], correct: 1, explanation: "Casablanca Valley's coastal fog influence creates cool conditions ideal for Sauvignon Blanc, Chardonnay, and Pinot Noir. It's Chile's pioneering cool-climate region." },
+  { id: 135, question: "What is unique about Jerez's 'albariza' soils?", options: ["They are volcanic", "They are white, chalky, and retain moisture well", "They are rich in iron", "They are primarily sand"], correct: 1, explanation: "Albariza is the prized white, chalky soil of Jerez, containing up to 80% calcium carbonate. It reflects heat, retains moisture, and produces Sherry's finest wines." },
+  { id: 136, question: "Hawke's Bay, New Zealand is best known for:", options: ["Sauvignon Blanc", "Bordeaux-style reds and Chardonnay", "Pinot Noir", "Riesling"], correct: 1, explanation: "Hawke's Bay on New Zealand's North Island has a warmer climate suited to Bordeaux varieties (Cabernet, Merlot, Syrah) and fuller-bodied Chardonnay." },
+  { id: 137, question: "What distinguishes Saint-Émilion from the Médoc?", options: ["It uses only white grapes", "It features Merlot-dominant blends on limestone and clay", "It has a maritime climate", "It is classified by vine age"], correct: 1, explanation: "Saint-Émilion on Bordeaux's Right Bank has limestone plateau and clay slopes favoring Merlot over Cabernet. Wines are typically softer and earlier-maturing than Left Bank styles." },
+  { id: 138, question: "Which Austrian region is famous for sweet wines from Neusiedlersee?", options: ["Wachau", "Burgenland", "Kremstal", "Kamptal"], correct: 1, explanation: "Burgenland's Neusiedlersee provides humid conditions ideal for botrytis development, producing exceptional sweet wines from Welschriesling, Chardonnay, and other varieties." },
+  { id: 139, question: "The Swartland is an emerging quality region in:", options: ["Australia", "Chile", "South Africa", "Argentina"], correct: 2, explanation: "South Africa's Swartland has become the country's most exciting wine region, known for old-vine Chenin Blanc, Rhône varieties, and natural winemaking. Hot, dry climate with granitic soils." },
+  { id: 140, question: "Hermitage is exclusively planted with:", options: ["Grenache", "Syrah (with small amounts of white grapes permitted)", "Mourvèdre", "Cinsaut"], correct: 1, explanation: "Hermitage in the Northern Rhône is 100% Syrah for reds, though up to 15% white grapes (Marsanne, Roussanne) may be co-fermented. These are France's most powerful Syrahs." },
+  { id: 141, question: "What is the Uco Valley known for in Argentina?", options: ["Coastal white wines", "High-altitude Malbec", "Sparkling wine production", "Port-style wines"], correct: 1, explanation: "The Uco Valley at 900-1,500m elevation produces Argentina's most refined Malbecs, with greater freshness and elegance than lower Mendoza sites. Also excellent for Chardonnay and Pinot Noir." },
+  { id: 142, question: "Stellenbosch in South Africa is primarily known for:", options: ["Pinotage and Chenin Blanc only", "Bordeaux-style reds and quality across varieties", "Sparkling wine exclusively", "Sweet Muscats"], correct: 1, explanation: "Stellenbosch is South Africa's most famous wine region, excelling with Cabernet Sauvignon, Bordeaux blends, and increasingly Syrah. Varied terroirs allow diverse quality production." },
+  { id: 143, question: "What characterizes wines from Finger Lakes, New York?", options: ["Full-bodied reds from warm climate", "Cool-climate Riesling and aromatic whites", "Exclusively sparkling wines", "Fortified wine production"], correct: 1, explanation: "New York's Finger Lakes is a cool-climate region producing excellent Riesling (dry to sweet), Gewürztraminer, and sparkling wines. Deep lakes moderate temperatures." },
+  { id: 144, question: "Ribera del Duero wines are made primarily from:", options: ["Garnacha", "Tempranillo (locally called Tinto Fino)", "Mencía", "Monastrell"], correct: 1, explanation: "Ribera del Duero is known for powerful Tempranillo (called Tinto Fino or Tinta del País locally), producing structured, age-worthy reds. Extreme continental climate creates intensity." },
+  { id: 145, question: "The Margaret River is Australia's premier region for:", options: ["Shiraz", "Riesling", "Cabernet Sauvignon and Chardonnay", "Fortified wines"], correct: 2, explanation: "Margaret River's Mediterranean climate produces elegant Cabernet Sauvignon (often Bordeaux-style blends) and refined Chardonnay. It's one of Australia's most prestigious regions." },
+  { id: 146, question: "What is special about Wachau's classification system?", options: ["It mirrors Burgundy exactly", "Steinfeder, Federspiel, and Smaragd indicate body/ripeness levels", "It classifies by color only", "There is no classification"], correct: 1, explanation: "Wachau uses three categories: Steinfeder (light, max 11.5%), Federspiel (medium, 11.5-12.5%), and Smaragd (full, 12.5%+). Named after lizards found in vineyards." },
+  { id: 147, question: "Colchagua Valley in Chile is famous for:", options: ["Cool-climate Sauvignon Blanc", "Carménère and Cabernet Sauvignon", "Pinot Noir", "Sparkling wines"], correct: 1, explanation: "Colchagua is one of Chile's warmest valleys, producing bold Carménère, ripe Cabernet Sauvignon, and Syrah. Part of the larger Rapel Valley region." },
+  { id: 148, question: "Central Otago, New Zealand is the world's most:", options: ["Northerly wine region", "Southerly wine region", "Largest wine region", "Oldest wine region"], correct: 1, explanation: "Central Otago at 45°S latitude is the world's southernmost major wine region. Its continental climate produces distinctive Pinot Noir with intense color and fruit." },
+  { id: 149, question: "Which Portuguese region is known for age-worthy red wines from Baga grape?", options: ["Douro", "Bairrada", "Alentejo", "Vinho Verde"], correct: 1, explanation: "Bairrada produces tannic, age-worthy reds from Baga grape, traditionally paired with local suckling pig. Modern producers are taming the tannins while preserving structure." },
+  { id: 150, question: "The Côtes du Rhône appellation covers:", options: ["Only the Northern Rhône", "Only the Southern Rhône", "Both Northern and Southern Rhône", "The Loire Valley"], correct: 2, explanation: "Côtes du Rhône is a broad appellation covering both Northern and Southern Rhône, though most production comes from the south. It's predominantly Grenache-based blends." },
+  { id: 151, question: "What is the difference between NV and Vintage Champagne?", options: ["There is no difference", "NV blends multiple years; Vintage is from a single declared year", "Vintage uses different grapes", "NV is always sweeter"], correct: 1, explanation: "Non-Vintage (NV) Champagne blends wines from multiple years for house consistency. Vintage Champagne comes from a single declared year (only made in exceptional vintages) and ages longer." },
+  { id: 152, question: "Crémant wines are:", options: ["Sweet dessert wines", "Traditional method sparkling wines from regions outside Champagne", "Still rosé wines", "Fortified wines"], correct: 1, explanation: "Crémant designates traditional method sparkling wines from French regions outside Champagne (Crémant d'Alsace, de Loire, de Bourgogne, etc.). Made with local grape varieties." },
+  { id: 153, question: "What does 'Brut Nature' mean on a Champagne label?", options: ["Made from organically grown grapes", "Zero dosage added", "Extra-aged Champagne", "Made only from Pinot Noir"], correct: 1, explanation: "Brut Nature (also called Zero Dosage or Non-Dosé) means no sugar was added after disgorgement. These are the driest Champagnes, showing pure, unadorned character." },
+  { id: 154, question: "Franciacorta sparkling wines are made in:", options: ["France", "Italy (Lombardy)", "Spain", "Germany"], correct: 1, explanation: "Franciacorta in Lombardy is Italy's premier traditional method sparkling wine region. Using Chardonnay, Pinot Noir, and Pinot Bianco, it rivals Champagne in quality." },
+  { id: 155, question: "What style of sparkling wine is Moscato d'Asti?", options: ["Bone dry and high pressure", "Lightly sweet, lightly sparkling (frizzante), and low alcohol", "Fully sparkling and very sweet", "Dry and high alcohol"], correct: 1, explanation: "Moscato d'Asti is gently sparkling (frizzante), lightly sweet, and low in alcohol (5-6%). Made from Muscat, it's aromatic with peach and floral notes. Perfect as a dessert wine or aperitif." },
+  { id: 156, question: "What is the term for the sediment removed from Champagne?", options: ["Dosage", "Lees", "Must", "Flor"], correct: 1, explanation: "Lees are the dead yeast cells that settle after second fermentation. Extended lees aging adds complexity (brioche, toast notes). Riddling collects lees in the neck for removal (disgorgement)." },
+  { id: 157, question: "Sekt is a sparkling wine from:", options: ["Italy", "Spain", "Germany and Austria", "Portugal"], correct: 2, explanation: "Sekt is German and Austrian sparkling wine, ranging from tank-method to traditional-method production. Quality Sekt (Winzersekt) from estate-grown Riesling or Pinot can be excellent." },
+  { id: 158, question: "What distinguishes 'Grower Champagne' from 'Négociant Champagne'?", options: ["Different grapes are used", "Grower Champagne is made by the grape grower themselves", "Négociant is always better quality", "Grower Champagne can't age"], correct: 1, explanation: "Grower Champagne (RM on label) is made by the grape grower. Négociant (NM) houses buy grapes to blend. Growers often showcase individual vineyard character; négociants blend for house style." },
+  { id: 159, question: "English sparkling wine is typically made from:", options: ["Riesling and Gewürztraminer", "Chardonnay, Pinot Noir, and Pinot Meunier", "Albariño and Verdejo", "Muscadet"], correct: 1, explanation: "English sparkling wine uses the same grapes as Champagne (Chardonnay, Pinot Noir, Pinot Meunier) and the traditional method. Climate change and chalk soils similar to Champagne have driven quality." },
+  { id: 160, question: "What does 'Blanc de Noirs' mean?", options: ["White wine from white grapes", "White wine from black (red) grapes", "Red wine from black grapes", "Rosé wine"], correct: 1, explanation: "Blanc de Noirs means 'white from blacks'—white wine made from red grapes (Pinot Noir and/or Pinot Meunier in Champagne). Gentle pressing prevents color extraction." },
+  { id: 161, question: "What distinguishes Manzanilla from Fino Sherry?", options: ["Different grape variety", "Manzanilla is aged in Sanlúcar de Barrameda, giving a saltier character", "Manzanilla is always sweeter", "There is no real difference"], correct: 1, explanation: "Manzanilla is Fino aged in Sanlúcar de Barrameda, where coastal humidity creates thicker flor and gives a distinctive salty, chamomile character. Legally its own DO." },
+  { id: 162, question: "Amontillado Sherry begins as:", options: ["Oloroso", "Fino, then continues aging oxidatively", "Pedro Ximénez", "Cream Sherry"], correct: 1, explanation: "Amontillado starts as Fino under flor, then the flor dies (naturally or deliberately) and it ages oxidatively. This creates a unique profile combining both styles—nutty, complex." },
+  { id: 163, question: "What grape is used for most Sherry production?", options: ["Pedro Ximénez", "Tempranillo", "Palomino", "Moscatel"], correct: 2, explanation: "Palomino is used for all dry Sherries (Fino, Manzanilla, Amontillado, Oloroso, Palo Cortado). PX and Moscatel are used for sweet styles." },
+  { id: 164, question: "A 20-Year-Old Tawny Port indicates:", options: ["The wine is exactly 20 years old", "An average age of components in the blend is around 20 years", "It was bottled 20 years ago", "The solera is 20 years old"], correct: 1, explanation: "Age-dated Tawnies (10, 20, 30, 40 years) indicate the average age of wines in the blend, approved by tasting panels. They're blends of various vintages for consistent style." },
+  { id: 165, question: "What is Colheita Port?", options: ["Ruby Port aged briefly", "Tawny from a single vintage, aged minimum 7 years in cask", "White Port", "Pink Port"], correct: 1, explanation: "Colheita is single-vintage Tawny Port, aged minimum 7 years in cask (often much longer). The label shows harvest year and bottling date. Unlike Vintage Port, it's ready to drink." },
+  { id: 166, question: "Bual (Boal) Madeira is:", options: ["The driest style", "Medium-sweet", "Very sweet", "Sparkling"], correct: 1, explanation: "Bual is medium-sweet Madeira, richer than Verdelho but less sweet than Malmsey. It shows caramel, dried fruit, and coffee notes with Madeira's signature acidity." },
+  { id: 167, question: "Which Madeira style is the driest?", options: ["Malmsey", "Bual", "Verdelho", "Sercial"], correct: 3, explanation: "Sercial is the driest Madeira style, with high acidity and almond, citrus, and mineral notes. It works as an aperitif. Malmsey is the sweetest." },
+  { id: 168, question: "What gives Madeira its remarkable longevity?", options: ["High residual sugar only", "The heating process (estufagem) and high acidity", "No oak aging", "Cold stabilization"], correct: 1, explanation: "Madeira's longevity comes from the estufagem (heating) process, which stabilizes the wine, combined with naturally high acidity. Opened bottles last months; aged examples can last centuries." },
+  { id: 169, question: "Rutherglen Muscat is:", options: ["A dry white wine", "A sweet, fortified wine aged in a solera-like system", "A sparkling wine", "An unfortified dessert wine"], correct: 1, explanation: "Rutherglen Muscat is a sweet, fortified wine from Victoria, Australia. Made from Muscat à Petits Grains Rouges, it's aged oxidatively in a solera-like system, developing intense raisined, toffee character." },
+  { id: 170, question: "Vin Doux Naturel (VDN) is:", options: ["A naturally sweet wine with no fortification", "A fortified wine where spirit is added during fermentation", "A dry wine", "A sparkling wine"], correct: 1, explanation: "Vin Doux Naturel ('naturally sweet wine') is actually fortified—grape spirit is added during fermentation to stop it early, retaining natural grape sugar. Examples include Muscat de Beaumes-de-Venise and Banyuls." },
+  { id: 171, question: "Palo Cortado Sherry is:", options: ["Always sweet", "A rare style combining Amontillado's aromatics with Oloroso's body", "Made under flor throughout aging", "Pink in color"], correct: 1, explanation: "Palo Cortado is a rare, mysterious Sherry that develops Amontillado's delicate, nutty nose but Oloroso's full body. It occurs unpredictably when flor dies unexpectedly on certain wines." },
+  { id: 172, question: "What is a Solera system?", options: ["A type of vine training", "A fractional blending system for consistent aged wine", "A fermentation vessel", "A grape variety"], correct: 1, explanation: "The Solera is a fractional blending system where young wine is added to older barrels in stages, so bottled wine contains elements from the system's inception. Used for Sherry, some Ports, and more." },
+  { id: 173, question: "Marsala comes from:", options: ["Spain", "Portugal", "Sicily, Italy", "France"], correct: 2, explanation: "Marsala is a fortified wine from western Sicily, made in dry to sweet styles. It's classified by color (oro, ambra, rubino), sweetness (secco to dolce), and age (Fine to Vergine)." },
+  { id: 174, question: "Crusted Port is:", options: ["A blend of vintages bottled unfiltered, throwing sediment", "Single vintage Port", "Aged only in cask", "White Port"], correct: 0, explanation: "Crusted Port is a blend of several vintages bottled young without filtration. It throws a 'crust' (sediment) in bottle and develops like Vintage Port but at lower cost. Must age 3+ years in bottle." },
+  { id: 175, question: "What does 'Vendange Tardive' mean in Alsace?", options: ["Early harvest", "Late harvest, resulting in richer, often sweeter wines", "Old vines", "Organic production"], correct: 1, explanation: "Vendange Tardive ('late harvest') in Alsace produces richer wines from grapes picked late with higher sugar. May be dry to sweet. Higher level Sélection de Grains Nobles requires noble rot." },
+  { id: 176, question: "What is 'battonage' commonly used for?", options: ["Adding sweetness to wine", "Stirring lees to add texture to white wines", "Fining red wines", "Carbonating sparkling wines"], correct: 1, explanation: "Bâtonnage (lees stirring) involves stirring settled dead yeast cells back into white wine, adding creamy texture, complexity, and protection from oxidation. Classic for white Burgundy." },
+  { id: 177, question: "What is the difference between fining and filtration?", options: ["There is no difference", "Fining uses agents that bind to particles; filtration physically strains wine", "Filtration is only for red wines", "Fining increases alcohol"], correct: 1, explanation: "Fining uses agents (bentonite, egg whites, etc.) that attract and bind to unwanted particles, which then settle out. Filtration physically strains wine through membranes to remove particles." },
+  { id: 178, question: "Micro-oxygenation is used to:", options: ["Add carbonation", "Soften tannins and develop wine similarly to barrel aging", "Increase acidity", "Remove alcohol"], correct: 1, explanation: "Micro-oxygenation (micro-ox) introduces tiny amounts of oxygen to wine in tank, softening tannins and developing complexity similar to barrel aging but faster. Used for wines not aged in barrel." },
+  { id: 179, question: "What is the purpose of 'pigeage'?", options: ["Adding sugar to must", "Punching down the cap of grape skins during red wine fermentation", "Filtering wine", "Adding oak chips"], correct: 1, explanation: "Pigeage (punch-down) breaks up the cap of grape skins that floats on fermenting red wine, increasing extraction of color, tannin, and flavor. Alternative to remontage (pump-over)." },
+  { id: 180, question: "Cold soaking (macération à froid) is used to:", options: ["Stop fermentation", "Extract color and fruit flavors before fermentation", "Reduce alcohol", "Increase tannin only"], correct: 1, explanation: "Cold soaking holds crushed red grapes at cold temperature before fermentation begins, extracting color and fresh fruit flavors without excessive tannin. Popular for Pinot Noir." },
+  { id: 181, question: "What does 'saignée' mean in rosé production?", options: ["Adding red wine to white", "Bleeding off juice early from a red wine fermentation", "Blending finished wines", "Short maceration only"], correct: 1, explanation: "Saignée ('bleeding') draws off pink juice early from a red wine fermentation. This concentrates the remaining red wine while producing rosé as a byproduct. An alternative to direct pressing." },
+  { id: 182, question: "Skin contact (maceration) for white wines:", options: ["Is never done", "Can add texture, color, and phenolic complexity (as in orange wines)", "Always creates defects", "Reduces aromatics"], correct: 1, explanation: "Extended skin contact for whites creates 'orange wines' with amber color, tannic grip, and complex flavors. Traditional in Georgia (qvevri wines) and increasingly popular globally." },
+  { id: 183, question: "What is the purpose of chaptalisation?", options: ["Adding acid", "Adding sugar to increase potential alcohol", "Adding tannin", "Reducing alcohol"], correct: 1, explanation: "Chaptalization adds sugar to must before/during fermentation to increase alcohol in cool vintages. Banned in warm regions (unnecessary) and some quality designations. Named after Jean-Antoine Chaptal." },
+  { id: 184, question: "Inert gas is used in winemaking to:", options: ["Add bubbles", "Protect wine from oxygen exposure", "Increase fermentation speed", "Add flavor"], correct: 1, explanation: "Inert gases (nitrogen, argon, CO2) blanket wine to prevent oxidation during transfers, storage, and bottling. Essential for preserving fresh, reductive winemaking styles." },
+  { id: 185, question: "What is 'assemblage' in winemaking?", options: ["Grape crushing", "Blending different wines to create the final cuvée", "Fermentation", "Bottling"], correct: 1, explanation: "Assemblage is the art of blending—combining different lots (varieties, vineyards, barrels, vintages) to create a finished wine. Critical in Champagne, Bordeaux, and non-vintage wines." },
+  { id: 186, question: "What does VDP in Germany signify?", options: ["A government quality level", "A private association of top estates with strict standards", "A grape variety", "A region"], correct: 1, explanation: "VDP (Verband Deutscher Prädikatsweingüter) is an association of top German estates with their own classification system (Gutswein to Grosses Gewächs), often stricter than legal requirements." },
+  { id: 187, question: "What does 'Classico' mean on an Italian wine label?", options: ["Classic winemaking techniques", "Wine from the original/historic heart of the region", "Aged in wood", "Entry-level wine"], correct: 1, explanation: "Classico indicates wine from the historic core zone of a region—usually the best terroir. Examples: Chianti Classico, Soave Classico, Valpolicella Classico." },
+  { id: 188, question: "What is a 'Cru Bourgeois'?", options: ["A Burgundy classification", "A Médoc classification below the 1855 Grands Crus", "A Champagne vineyard", "An Italian designation"], correct: 1, explanation: "Cru Bourgeois is a Médoc classification for quality estates not included in the 1855 Classification. Updated regularly, with levels Cru Bourgeois, Supérieur, and Exceptionnel." },
+  { id: 189, question: "What does 'Superiore' mean on Italian wine labels?", options: ["Organic wine", "Higher alcohol and/or longer aging than basic version", "Sparkling wine", "From a specific vineyard"], correct: 1, explanation: "Superiore typically indicates wine with slightly higher minimum alcohol and/or longer aging requirements than the basic DOC/DOCG. Examples: Valpolicella Superiore, Barbera d'Asti Superiore." },
+  { id: 190, question: "AVA (American Viticultural Area) guarantees:", options: ["Wine quality", "Specific winemaking practices", "Geographic origin only", "Grape varieties used"], correct: 2, explanation: "AVAs define grape-growing regions based on geography, climate, and soil—not grape variety or winemaking. They only guarantee origin, unlike European appellations which regulate more." },
+  { id: 191, question: "What temperature should light-bodied white wines be served?", options: ["18-20°C", "14-16°C", "7-10°C", "0-4°C"], correct: 2, explanation: "Light, aromatic whites are best at 7-10°C. Warmer temperatures make them seem flabby; too cold mutes aromatics. Fuller whites can be served slightly warmer (10-13°C)." },
+  { id: 192, question: "Why should very old wines be stood upright before serving?", options: ["To warm them up", "To allow sediment to settle to the bottom for easier decanting", "To increase oxidation", "There is no reason"], correct: 1, explanation: "Standing old bottles upright for 24-48 hours lets sediment settle to the bottom, making decanting easier and cleaner. The wine can then be poured off the sediment carefully." },
+  { id: 193, question: "Which wines generally benefit LEAST from decanting?", options: ["Young, tannic reds", "Old wines with sediment", "Light, delicate aged white wines", "Full-bodied, oaky reds"], correct: 2, explanation: "Delicate aged whites can deteriorate quickly with oxygen exposure. They're best served directly from bottle. Young, tannic reds and old reds (for sediment) benefit most from decanting." },
+  { id: 194, question: "Umami-rich foods pair best with wines that have:", options: ["High tannin", "Low tannin and/or fruity sweetness", "High acidity only", "No oak influence"], correct: 1, explanation: "Umami (found in aged cheese, mushrooms, soy sauce) can make tannic wines taste bitter. Better matches are fruity, low-tannin wines, or those with slight sweetness." },
+  { id: 195, question: "What is 'bridging' in food and wine pairing?", options: ["Using a sauce to connect wine and protein", "Using an ingredient that links flavors in both food and wine", "Serving wine in a bridge glass", "A specific pouring technique"], correct: 1, explanation: "Bridging uses shared flavor elements (herbs, mushrooms, fruit reductions) to connect wine and food. Example: mushroom sauce bridges Pinot Noir's earthy notes with beef." },
+  { id: 196, question: "Spicy foods typically pair best with:", options: ["High-alcohol, tannic reds", "Off-dry whites or fruity, low-alcohol wines", "Bone-dry, high-acid whites", "Heavily oaked wines"], correct: 1, explanation: "Spicy heat is amplified by alcohol and tannin. Off-dry wines (Riesling, Gewürztraminer) or fruity, lower-alcohol options contrast and cool the palate." },
+  { id: 197, question: "When pairing wine with dessert, the wine should generally be:", options: ["Drier than the dessert", "Sweeter than or as sweet as the dessert", "Any style works equally well", "Red wines only"], correct: 1, explanation: "Dessert wines should match or exceed the dessert's sweetness—otherwise the wine tastes thin and sour. Sauternes with fruit tart, Pedro Ximénez with chocolate." },
+  { id: 198, question: "What does 'GG' (Grosses Gewächs) mean in German wine?", options: ["Grand Cru-equivalent dry wine from top VDP sites", "Sweet wine designation", "Sparkling wine classification", "Entry-level wine"], correct: 0, explanation: "Grosses Gewächs (GG) is VDP's top dry wine classification from Grosse Lage (grand cru) vineyards. These are Germany's finest dry wines, mainly Riesling and Pinot Noir." },
+  { id: 199, question: "What is a 'Lieu-dit' in French wine?", options: ["A type of vine training", "A named vineyard plot, often with historical significance", "A winemaking technique", "A quality designation"], correct: 1, explanation: "Lieu-dit is a named plot of land with local, often historical, significance—smaller than appellation but not necessarily classified. Many represent distinct terroirs." },
+  { id: 200, question: "What does 'Vigneron' mean?", options: ["A grape variety", "A wine merchant", "A grape grower/winemaker", "A sommelier"], correct: 2, explanation: "Vigneron refers to someone who grows grapes and makes wine—combining viticulture and vinification. In France, it implies artisan, estate-based production rather than industrial scale." }
 ];
 
-const STORAGE_KEY = 'wset-quiz-history';
-const LEADERBOARD_KEY = 'wset-quiz-leaderboard';
-
-const Confetti = () => {
-  const [particles, setParticles] = useState([]);
-  useEffect(() => {
-    const colors = ['#FFD700', '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD', '#98D8C8'];
-    setParticles(Array.from({ length: 150 }, (_, i) => ({
-      id: i, x: Math.random() * 100, delay: Math.random() * 3, duration: 3 + Math.random() * 2,
-      color: colors[Math.floor(Math.random() * colors.length)], size: 8 + Math.random() * 8
-    })));
-  }, []);
-  return (
-    <div className="fixed inset-0 pointer-events-none overflow-hidden z-50">
-      {particles.map(p => (
-        <div key={p.id} className="absolute" style={{ left: `${p.x}%`, top: '-20px', width: p.size, height: p.size, backgroundColor: p.color, borderRadius: Math.random() > 0.5 ? '50%' : '2px', animation: `fall ${p.duration}s ease-in ${p.delay}s forwards` }} />
-      ))}
-      <style>{`@keyframes fall { 0% { transform: translateY(0) rotate(0deg); opacity: 1; } 100% { transform: translateY(100vh) rotate(720deg); opacity: 0; } }`}</style>
-    </div>
-  );
+// Fisher-Yates shuffle algorithm
+const shuffleArray = (array) => {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
 };
 
+// Main App Component
 export default function App() {
-  const [screen, setScreen] = useState('setup');
-  const [questionCount, setQuestionCount] = useState(20);
+  // Game state
+  const [screen, setScreen] = useState('home');
+  const [gameMode, setGameMode] = useState(null);
   const [category, setCategory] = useState('all');
   const [questions, setQuestions] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [showExplanation, setShowExplanation] = useState(false);
-  const [results, setResults] = useState([]);
-  const [history, setHistory] = useState({ seen: {}, incorrect: {} });
-  const [leaderboard, setLeaderboard] = useState([]);
-  const [showConfetti, setShowConfetti] = useState(false);
+  const [score, setScore] = useState(0);
+  const [answeredQuestions, setAnsweredQuestions] = useState([]);
+  
+  // Multiplayer state
+  const [players, setPlayers] = useState([]);
+  const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0);
+  const [playerScores, setPlayerScores] = useState({});
   const [playerName, setPlayerName] = useState('');
-  const [showNameInput, setShowNameInput] = useState(false);
-
+  
+  // Progress tracking
+  const [questionHistory, setQuestionHistory] = useState({});
+  
+  // Load progress from localStorage on mount
   useEffect(() => {
     try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) setHistory(JSON.parse(saved));
-      const lb = localStorage.getItem(LEADERBOARD_KEY);
-      if (lb) setLeaderboard(JSON.parse(lb));
-    } catch (e) { console.log('No history'); }
+      const saved = localStorage.getItem('wset-quiz-history');
+      if (saved) {
+        setQuestionHistory(JSON.parse(saved));
+      }
+    } catch (e) {
+      console.log('Could not load progress');
+    }
   }, []);
-
-  const saveHistory = h => { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(h)); } catch (e) {} };
-  const saveLeaderboard = lb => { try { localStorage.setItem(LEADERBOARD_KEY, JSON.stringify(lb)); } catch (e) {} };
-
-  const getAvailableQuestions = useCallback(() => {
-    const catDef = CATEGORIES[category];
-    return catDef.ids ? QUESTIONS.filter(q => catDef.ids.includes(q.id)) : QUESTIONS;
-  }, [category]);
-
-  const selectQuestions = useCallback((count) => {
-    const available = getAvailableQuestions();
-    const never = available.filter(q => !history.seen[q.id]);
-    const incorrect = available.filter(q => history.incorrect[q.id] && !never.includes(q));
-    const correct = available.filter(q => history.seen[q.id] && !history.incorrect[q.id]);
-    const shuffle = arr => [...arr].sort(() => Math.random() - 0.5);
-    let selected = [...shuffle(never).slice(0, count)];
-    if (selected.length < count) selected.push(...shuffle(incorrect).slice(0, count - selected.length));
-    if (selected.length < count) selected.push(...shuffle(correct).slice(0, count - selected.length));
-    return shuffle(selected);
-  }, [history, getAvailableQuestions]);
-
-  const startQuiz = () => {
-    const available = getAvailableQuestions();
-    const actualCount = Math.min(questionCount, available.length);
-    setQuestions(selectQuestions(actualCount));
-    setCurrentIndex(0); setResults([]); setSelectedAnswer(null); setShowExplanation(false); setScreen('quiz');
+  
+  // Save progress to localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem('wset-quiz-history', JSON.stringify(questionHistory));
+    } catch (e) {
+      console.log('Could not save progress');
+    }
+  }, [questionHistory]);
+  
+  // Smart question selection
+  const selectQuestions = useCallback((cat, count = 20) => {
+    let availableIds = CATEGORIES[cat].ids || QUESTIONS.map(q => q.id);
+    let pool = QUESTIONS.filter(q => availableIds.includes(q.id));
+    
+    // Prioritize: never seen > answered wrong > answered correct
+    const neverSeen = pool.filter(q => !questionHistory[q.id]);
+    const answeredWrong = pool.filter(q => questionHistory[q.id] === 'wrong');
+    const answeredCorrect = pool.filter(q => questionHistory[q.id] === 'correct');
+    
+    let selected = [];
+    
+    // First, add never-seen questions
+    const shuffledNeverSeen = shuffleArray(neverSeen);
+    selected.push(...shuffledNeverSeen.slice(0, count));
+    
+    // If need more, add previously wrong answers
+    if (selected.length < count) {
+      const shuffledWrong = shuffleArray(answeredWrong);
+      selected.push(...shuffledWrong.slice(0, count - selected.length));
+    }
+    
+    // If still need more, add previously correct
+    if (selected.length < count) {
+      const shuffledCorrect = shuffleArray(answeredCorrect);
+      selected.push(...shuffledCorrect.slice(0, count - selected.length));
+    }
+    
+    return shuffleArray(selected);
+  }, [questionHistory]);
+  
+  // Start solo game
+  const startSoloGame = (cat) => {
+    setCategory(cat);
+    setGameMode('solo');
+    const selected = selectQuestions(cat);
+    setQuestions(selected);
+    setCurrentIndex(0);
+    setScore(0);
+    setSelectedAnswer(null);
+    setShowExplanation(false);
+    setAnsweredQuestions([]);
+    setScreen('quiz');
   };
-
-  const handleAnswer = (index) => {
-    if (showExplanation) return;
-    setSelectedAnswer(index); setShowExplanation(true);
-    const q = questions[currentIndex], isCorrect = index === q.correct;
-    setResults(prev => [...prev, { questionId: q.id, correct: isCorrect, selected: index }]);
-    const newHistory = { ...history, seen: { ...history.seen, [q.id]: true }, incorrect: { ...history.incorrect } };
-    if (!isCorrect) newHistory.incorrect[q.id] = true; else delete newHistory.incorrect[q.id];
-    setHistory(newHistory); saveHistory(newHistory);
+  
+  // Start multiplayer game
+  const startMultiplayerGame = (cat) => {
+    if (players.length < 2) return;
+    setCategory(cat);
+    setGameMode('multiplayer');
+    const selected = selectQuestions(cat, 10 * players.length);
+    setQuestions(selected);
+    setCurrentIndex(0);
+    setCurrentPlayerIndex(0);
+    const initialScores = {};
+    players.forEach(p => initialScores[p] = 0);
+    setPlayerScores(initialScores);
+    setSelectedAnswer(null);
+    setShowExplanation(false);
+    setAnsweredQuestions([]);
+    setScreen('quiz');
   };
-
-  const nextQuestion = () => {
-    if (currentIndex < questions.length - 1) {
-      setCurrentIndex(i => i + 1); setSelectedAnswer(null); setShowExplanation(false);
-    } else {
-      const pct = (results.filter(r => r.correct).length / questions.length) * 100;
-      if (pct >= 85) { setShowConfetti(true); setTimeout(() => setShowConfetti(false), 6000); }
-      setShowNameInput(true);
-      setScreen('results');
+  
+  // Add player
+  const addPlayer = () => {
+    if (playerName.trim() && players.length < 6 && !players.includes(playerName.trim())) {
+      setPlayers([...players, playerName.trim()]);
+      setPlayerName('');
     }
   };
-
-  const addToLeaderboard = () => {
-    if (!playerName.trim()) return;
-    const score = results.filter(r => r.correct).length;
-    const pct = (score / questions.length) * 100;
-    const entry = { name: playerName.trim(), score, total: questions.length, percentage: pct, category: CATEGORIES[category].name, date: new Date().toLocaleDateString() };
-    const newLb = [...leaderboard, entry].sort((a, b) => b.percentage - a.percentage).slice(0, 20);
-    setLeaderboard(newLb); saveLeaderboard(newLb);
-    setShowNameInput(false);
+  
+  // Remove player
+  const removePlayer = (name) => {
+    setPlayers(players.filter(p => p !== name));
   };
-
-  const resetHistory = () => { const h = { seen: {}, incorrect: {} }; setHistory(h); saveHistory(h); };
-  const clearLeaderboard = () => { setLeaderboard([]); saveLeaderboard([]); };
-
-  const missedQuestions = results.filter(r => !r.correct).map(r => ({ ...QUESTIONS.find(q => q.id === r.questionId), selected: r.selected }));
-
-  if (screen === 'setup') {
-    const seenCount = Object.keys(history.seen).length, incorrectCount = Object.keys(history.incorrect).length;
-    const availableCount = getAvailableQuestions().length;
+  
+  // Handle answer selection
+  const handleAnswer = (index) => {
+    if (selectedAnswer !== null) return;
+    
+    setSelectedAnswer(index);
+    const currentQuestion = questions[currentIndex];
+    const isCorrect = index === currentQuestion.correct;
+    
+    // Update history
+    setQuestionHistory(prev => ({
+      ...prev,
+      [currentQuestion.id]: isCorrect ? 'correct' : 'wrong'
+    }));
+    
+    // Update score
+    if (gameMode === 'solo') {
+      if (isCorrect) setScore(s => s + 1);
+    } else {
+      if (isCorrect) {
+        setPlayerScores(prev => ({
+          ...prev,
+          [players[currentPlayerIndex]]: prev[players[currentPlayerIndex]] + 1
+        }));
+      }
+    }
+    
+    setAnsweredQuestions([...answeredQuestions, { ...currentQuestion, userAnswer: index, correct: isCorrect }]);
+    setShowExplanation(true);
+  };
+  
+  // Next question
+  const nextQuestion = () => {
+    if (currentIndex + 1 >= questions.length) {
+      setScreen('results');
+    } else {
+      setCurrentIndex(currentIndex + 1);
+      setSelectedAnswer(null);
+      setShowExplanation(false);
+      if (gameMode === 'multiplayer') {
+        setCurrentPlayerIndex((currentPlayerIndex + 1) % players.length);
+      }
+    }
+  };
+  
+  // Calculate stats
+  const getStats = () => {
+    const total = QUESTIONS.length;
+    const seen = Object.keys(questionHistory).length;
+    const correct = Object.values(questionHistory).filter(v => v === 'correct').length;
+    return { total, seen, correct, percentage: seen > 0 ? Math.round((correct / seen) * 100) : 0 };
+  };
+  
+  // Home Screen
+  const HomeScreen = () => {
+    const stats = getStats();
+    
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 flex items-center justify-center p-4">
-        <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-8 max-w-md w-full text-white shadow-2xl">
-          <div className="flex items-center justify-center mb-6"><Wine className="w-12 h-12 text-purple-300" /></div>
-          <h1 className="text-3xl font-bold text-center mb-2">WSET Level 2</h1>
-          <p className="text-purple-200 text-center mb-6">Practice Quiz</p>
+      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-4">
+        <div className="max-w-2xl mx-auto">
+          <Logo />
           
-          <div className="flex gap-2 mb-6">
-            <button onClick={() => setScreen('leaderboard')} className="flex-1 py-2 bg-white/10 rounded-xl hover:bg-white/20 transition-all flex items-center justify-center gap-2 text-sm">
-              <Users className="w-4 h-4" /> Leaderboard
+          <div className="text-center mb-8">
+            <div className="flex items-center justify-center gap-2 mb-4">
+              <Wine className="w-12 h-12 text-yellow-400" />
+              <h1 className="text-4xl font-bold text-white">WSET Level 2</h1>
+            </div>
+            <p className="text-purple-200">Master the Wine & Spirits Education Trust Curriculum</p>
+          </div>
+          
+          {/* Progress Stats */}
+          <div className="bg-white/10 backdrop-blur rounded-xl p-4 mb-6">
+            <div className="flex items-center gap-2 text-yellow-400 mb-2">
+              <Sparkles className="w-5 h-5" />
+              <span className="font-semibold">Your Progress</span>
+            </div>
+            <div className="grid grid-cols-3 gap-4 text-center">
+              <div>
+                <div className="text-2xl font-bold text-white">{stats.seen}</div>
+                <div className="text-sm text-purple-300">Questions Seen</div>
+              </div>
+              <div>
+                <div className="text-2xl font-bold text-green-400">{stats.correct}</div>
+                <div className="text-sm text-purple-300">Correct</div>
+              </div>
+              <div>
+                <div className="text-2xl font-bold text-yellow-400">{stats.percentage}%</div>
+                <div className="text-sm text-purple-300">Accuracy</div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Game Mode Selection */}
+          <div className="space-y-4">
+            <button
+              onClick={() => setScreen('solo-category')}
+              className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white p-4 rounded-xl flex items-center justify-center gap-3 font-semibold text-lg transition-all shadow-lg"
+            >
+              <Play className="w-6 h-6" />
+              Solo Practice
+            </button>
+            
+            <button
+              onClick={() => setScreen('multiplayer-setup')}
+              className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white p-4 rounded-xl flex items-center justify-center gap-3 font-semibold text-lg transition-all shadow-lg"
+            >
+              <Users className="w-6 h-6" />
+              Multiplayer Challenge
+            </button>
+            
+            <button
+              onClick={() => setScreen('study')}
+              className="w-full bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white p-4 rounded-xl flex items-center justify-center gap-3 font-semibold text-lg transition-all shadow-lg"
+            >
+              <BookOpen className="w-6 h-6" />
+              Study Mode
             </button>
           </div>
-
-          <div className="bg-white/5 rounded-xl p-4 mb-6">
-            <p className="text-sm text-purple-200 mb-2">Your Progress</p>
-            <div className="flex justify-between text-sm"><span>{seenCount}/100 attempted</span><span>{incorrectCount} to review</span></div>
-            <div className="w-full bg-white/10 rounded-full h-2 mt-2"><div className="bg-gradient-to-r from-purple-400 to-pink-400 h-2 rounded-full" style={{ width: `${seenCount}%` }} /></div>
-          </div>
-
-          <div className="mb-6">
-            <label className="block text-sm text-purple-200 mb-2">Category</label>
-            <select value={category} onChange={e => setCategory(e.target.value)} className="w-full p-3 rounded-xl bg-white/10 border border-white/20 text-white">
-              {Object.entries(CATEGORIES).map(([key, val]) => (
-                <option key={key} value={key} className="bg-purple-900">{val.name} {val.ids ? `(${val.ids.length})` : '(100)'}</option>
-              ))}
-            </select>
-          </div>
-
-          <div className="mb-6">
-            <label className="block text-sm text-purple-200 mb-2">Questions ({availableCount} available)</label>
-            <div className="grid grid-cols-4 gap-2">
-              {[20, 30, 40, 50].map(num => (
-                <button key={num} onClick={() => setQuestionCount(num)} disabled={num > availableCount}
-                  className={`py-3 rounded-xl font-semibold transition-all ${questionCount === num ? 'bg-gradient-to-r from-purple-500 to-pink-500 shadow-lg scale-105' : num > availableCount ? 'bg-white/5 opacity-30 cursor-not-allowed' : 'bg-white/10 hover:bg-white/20'}`}>
-                  {num}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="bg-white/5 rounded-xl p-4 mb-6 text-sm">
-            <p className="text-purple-200 mb-2">Grading Scale</p>
-            <div className="space-y-1 text-purple-100">
-              <p>• Pass: 55%+ ({Math.ceil(Math.min(questionCount, availableCount) * 0.55)}+)</p>
-              <p>• Merit: 70%+ ({Math.ceil(Math.min(questionCount, availableCount) * 0.70)}+)</p>
-              <p>• Distinction: 85%+ ({Math.ceil(Math.min(questionCount, availableCount) * 0.85)}+)</p>
-            </div>
-          </div>
-
-          <button onClick={startQuiz} className="w-full py-4 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl font-bold text-lg hover:opacity-90 transition-all flex items-center justify-center gap-2 shadow-lg">
-            <Play className="w-5 h-5" /> Start Quiz
-          </button>
-          {seenCount > 0 && <button onClick={resetHistory} className="w-full mt-3 py-2 text-purple-300 hover:text-white transition-colors flex items-center justify-center gap-2 text-sm"><RotateCcw className="w-4 h-4" /> Reset Progress</button>}
         </div>
       </div>
     );
-  }
-
-  if (screen === 'leaderboard') {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 flex items-center justify-center p-4">
-        <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-6 max-w-md w-full text-white shadow-2xl">
-          <div className="flex items-center justify-between mb-6">
-            <button onClick={() => setScreen('setup')} className="p-2 hover:bg-white/10 rounded-lg"><ChevronLeft className="w-5 h-5" /></button>
-            <h2 className="text-xl font-bold flex items-center gap-2"><Trophy className="w-5 h-5 text-yellow-400" /> Leaderboard</h2>
-            <div className="w-9" />
+  };
+  
+  // Category Selection Screen
+  const CategoryScreen = ({ onSelect, mode }) => (
+    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-4">
+      <div className="max-w-2xl mx-auto">
+        <Logo />
+        
+        <button
+          onClick={() => setScreen(mode === 'multiplayer' ? 'multiplayer-setup' : 'home')}
+          className="flex items-center gap-2 text-purple-300 hover:text-white mb-6 transition-colors"
+        >
+          <ChevronLeft className="w-5 h-5" />
+          Back
+        </button>
+        
+        <h2 className="text-2xl font-bold text-white mb-6 text-center">Select a Topic</h2>
+        
+        <div className="grid gap-3">
+          {Object.entries(CATEGORIES).map(([key, { name, ids }]) => (
+            <button
+              key={key}
+              onClick={() => onSelect(key)}
+              className="bg-white/10 hover:bg-white/20 backdrop-blur text-white p-4 rounded-xl text-left transition-all flex justify-between items-center"
+            >
+              <span className="font-medium">{name}</span>
+              <span className="text-purple-300 text-sm">
+                {ids ? ids.length : QUESTIONS.length} questions
+              </span>
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+  
+  // Multiplayer Setup Screen
+  const MultiplayerSetupScreen = () => (
+    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-4">
+      <div className="max-w-2xl mx-auto">
+        <Logo />
+        
+        <button
+          onClick={() => setScreen('home')}
+          className="flex items-center gap-2 text-purple-300 hover:text-white mb-6 transition-colors"
+        >
+          <ChevronLeft className="w-5 h-5" />
+          Back
+        </button>
+        
+        <h2 className="text-2xl font-bold text-white mb-6 text-center">Multiplayer Setup</h2>
+        
+        <div className="bg-white/10 backdrop-blur rounded-xl p-4 mb-6">
+          <div className="flex gap-2 mb-4">
+            <input
+              type="text"
+              value={playerName}
+              onChange={(e) => setPlayerName(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && addPlayer()}
+              placeholder="Enter player name"
+              className="flex-1 bg-white/20 text-white placeholder-purple-300 rounded-lg px-4 py-2 outline-none focus:ring-2 focus:ring-purple-400"
+              maxLength={15}
+            />
+            <button
+              onClick={addPlayer}
+              disabled={!playerName.trim() || players.length >= 6}
+              className="bg-green-500 hover:bg-green-600 disabled:bg-gray-500 text-white px-4 py-2 rounded-lg transition-colors"
+            >
+              Add
+            </button>
           </div>
-          {leaderboard.length === 0 ? (
-            <div className="text-center py-12 text-purple-200">
-              <Users className="w-12 h-12 mx-auto mb-4 opacity-50" />
-              <p>No scores yet!</p>
-              <p className="text-sm mt-2">Complete a quiz to be the first.</p>
+          
+          <div className="space-y-2">
+            {players.map((name, i) => (
+              <div key={name} className="flex justify-between items-center bg-white/10 rounded-lg px-4 py-2">
+                <span className="text-white">{i + 1}. {name}</span>
+                <button
+                  onClick={() => removePlayer(name)}
+                  className="text-red-400 hover:text-red-300"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            ))}
+            {players.length === 0 && (
+              <p className="text-purple-300 text-center py-4">Add at least 2 players to start</p>
+            )}
+          </div>
+        </div>
+        
+        <button
+          onClick={() => setScreen('multiplayer-category')}
+          disabled={players.length < 2}
+          className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 disabled:from-gray-500 disabled:to-gray-600 text-white p-4 rounded-xl font-semibold text-lg transition-all shadow-lg"
+        >
+          {players.length < 2 ? `Need ${2 - players.length} more player(s)` : 'Choose Category'}
+        </button>
+      </div>
+    </div>
+  );
+  
+  // Quiz Screen
+  const QuizScreen = () => {
+    const current = questions[currentIndex];
+    if (!current) return null;
+    
+    const progress = ((currentIndex + 1) / questions.length) * 100;
+    
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-4">
+        <div className="max-w-2xl mx-auto">
+          <Logo />
+          
+          {/* Header */}
+          <div className="flex justify-between items-center mb-4">
+            <button
+              onClick={() => setScreen('home')}
+              className="text-purple-300 hover:text-white transition-colors"
+            >
+              <X className="w-6 h-6" />
+            </button>
+            <div className="text-white font-medium">
+              {currentIndex + 1} / {questions.length}
             </div>
-          ) : (
-            <div className="space-y-2 max-h-96 overflow-y-auto">
-              {leaderboard.map((entry, i) => (
-                <div key={i} className={`p-3 rounded-xl ${i === 0 ? 'bg-yellow-500/20 border border-yellow-500/30' : i === 1 ? 'bg-gray-400/20' : i === 2 ? 'bg-orange-500/20' : 'bg-white/5'}`}>
-                  <div className="flex items-center gap-3">
-                    <span className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${i === 0 ? 'bg-yellow-500' : i === 1 ? 'bg-gray-400' : i === 2 ? 'bg-orange-500' : 'bg-white/20'}`}>{i + 1}</span>
-                    <div className="flex-1">
-                      <p className="font-semibold">{entry.name}</p>
-                      <p className="text-xs text-purple-200">{entry.category} • {entry.date}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-bold">{entry.percentage.toFixed(0)}%</p>
-                      <p className="text-xs text-purple-200">{entry.score}/{entry.total}</p>
-                    </div>
-                  </div>
+            {gameMode === 'solo' ? (
+              <div className="text-green-400 font-bold">{score} pts</div>
+            ) : (
+              <div className="text-yellow-400 font-bold">{players[currentPlayerIndex]}'s turn</div>
+            )}
+          </div>
+          
+          {/* Progress bar */}
+          <div className="w-full bg-white/20 rounded-full h-2 mb-6">
+            <div
+              className="bg-gradient-to-r from-green-400 to-emerald-500 h-2 rounded-full transition-all duration-300"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+          
+          {/* Multiplayer scores */}
+          {gameMode === 'multiplayer' && (
+            <div className="flex flex-wrap gap-2 mb-4">
+              {players.map((p, i) => (
+                <div
+                  key={p}
+                  className={`px-3 py-1 rounded-full text-sm ${
+                    i === currentPlayerIndex
+                      ? 'bg-yellow-500 text-black font-bold'
+                      : 'bg-white/20 text-white'
+                  }`}
+                >
+                  {p}: {playerScores[p]}
                 </div>
               ))}
             </div>
           )}
-          {leaderboard.length > 0 && (
-            <button onClick={clearLeaderboard} className="w-full mt-4 py-2 text-purple-300 hover:text-white text-sm">Clear Leaderboard</button>
-          )}
-        </div>
-      </div>
-    );
-  }
-
-  if (screen === 'quiz') {
-    const q = questions[currentIndex], progress = ((currentIndex + 1) / questions.length) * 100;
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 flex items-center justify-center p-4">
-        <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-6 max-w-2xl w-full text-white shadow-2xl">
-          <div className="flex justify-between items-center mb-4">
-            <span className="text-purple-200 text-sm">Q{currentIndex + 1}/{questions.length}</span>
-            <span className="text-xs text-purple-300 bg-white/10 px-2 py-1 rounded">{CATEGORIES[category].name}</span>
-            <span className="text-purple-200 text-sm">{results.filter(r => r.correct).length} ✓</span>
+          
+          {/* Question */}
+          <div className="bg-white/10 backdrop-blur rounded-xl p-6 mb-6">
+            <h2 className="text-xl text-white font-medium leading-relaxed">{current.question}</h2>
           </div>
-          <div className="w-full bg-white/10 rounded-full h-2 mb-6"><div className="bg-gradient-to-r from-purple-400 to-pink-400 h-2 rounded-full transition-all duration-300" style={{ width: `${progress}%` }} /></div>
-          <h2 className="text-xl font-semibold mb-6 leading-relaxed">{q.question}</h2>
+          
+          {/* Options */}
           <div className="space-y-3 mb-6">
-            {q.options.map((opt, i) => {
-              let cls = 'w-full p-4 rounded-xl text-left transition-all ';
-              if (showExplanation) {
-                if (i === q.correct) cls += 'bg-green-500/30 border-2 border-green-400';
-                else if (i === selectedAnswer) cls += 'bg-red-500/30 border-2 border-red-400';
-                else cls += 'bg-white/5 opacity-50';
-              } else cls += 'bg-white/10 hover:bg-white/20 cursor-pointer';
+            {current.options.map((option, i) => {
+              let bgClass = 'bg-white/10 hover:bg-white/20';
+              let borderClass = 'border-2 border-transparent';
+              
+              if (selectedAnswer !== null) {
+                if (i === current.correct) {
+                  bgClass = 'bg-green-500/30';
+                  borderClass = 'border-2 border-green-400';
+                } else if (i === selectedAnswer && i !== current.correct) {
+                  bgClass = 'bg-red-500/30';
+                  borderClass = 'border-2 border-red-400';
+                }
+              }
+              
               return (
-                <button key={i} onClick={() => handleAnswer(i)} disabled={showExplanation} className={cls}>
-                  <div className="flex items-center gap-3">
-                    <span className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-sm font-semibold">{String.fromCharCode(65 + i)}</span>
-                    <span className="flex-1">{opt}</span>
-                    {showExplanation && i === q.correct && <CheckCircle className="w-5 h-5 text-green-400" />}
-                    {showExplanation && i === selectedAnswer && i !== q.correct && <XCircle className="w-5 h-5 text-red-400" />}
-                  </div>
+                <button
+                  key={i}
+                  onClick={() => handleAnswer(i)}
+                  disabled={selectedAnswer !== null}
+                  className={`w-full ${bgClass} ${borderClass} backdrop-blur text-white p-4 rounded-xl text-left transition-all flex items-center gap-3`}
+                >
+                  <span className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center font-bold text-sm">
+                    {String.fromCharCode(65 + i)}
+                  </span>
+                  <span>{option}</span>
+                  {selectedAnswer !== null && i === current.correct && (
+                    <CheckCircle className="w-6 h-6 text-green-400 ml-auto" />
+                  )}
+                  {selectedAnswer === i && i !== current.correct && (
+                    <XCircle className="w-6 h-6 text-red-400 ml-auto" />
+                  )}
                 </button>
               );
             })}
           </div>
+          
+          {/* Explanation */}
           {showExplanation && (
-            <div className="bg-white/5 rounded-xl p-4 mb-6 border border-white/10">
-              <div className="flex items-start gap-2"><Sparkles className="w-5 h-5 text-yellow-400 mt-0.5 flex-shrink-0" /><p className="text-purple-100 text-sm leading-relaxed">{q.explanation}</p></div>
+            <div className="bg-blue-500/20 border border-blue-400/50 rounded-xl p-4 mb-6">
+              <p className="text-blue-100">{current.explanation}</p>
             </div>
           )}
-          {showExplanation && <button onClick={nextQuestion} className="w-full py-4 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl font-bold hover:opacity-90 transition-all">{currentIndex < questions.length - 1 ? 'Next Question' : 'See Results'}</button>}
+          
+          {/* Next button */}
+          {selectedAnswer !== null && (
+            <button
+              onClick={nextQuestion}
+              className="w-full bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white p-4 rounded-xl font-semibold text-lg transition-all shadow-lg"
+            >
+              {currentIndex + 1 >= questions.length ? 'See Results' : 'Next Question'}
+            </button>
+          )}
         </div>
       </div>
     );
-  }
-
-  if (screen === 'review') {
+  };
+  
+  // Results Screen
+  const ResultsScreen = () => {
+    const percentage = Math.round((score / questions.length) * 100);
+    
+    const getGrade = () => {
+      if (percentage >= 90) return { icon: Trophy, color: 'text-yellow-400', text: 'Outstanding!' };
+      if (percentage >= 75) return { icon: Award, color: 'text-purple-400', text: 'Excellent!' };
+      if (percentage >= 60) return { icon: Medal, color: 'text-blue-400', text: 'Good Job!' };
+      return { icon: Wine, color: 'text-pink-400', text: 'Keep Practicing!' };
+    };
+    
+    const grade = getGrade();
+    const GradeIcon = grade.icon;
+    
+    // Multiplayer winner
+    const getWinner = () => {
+      if (gameMode !== 'multiplayer') return null;
+      const maxScore = Math.max(...Object.values(playerScores));
+      const winners = Object.entries(playerScores).filter(([_, s]) => s === maxScore);
+      return winners;
+    };
+    
+    const winners = getWinner();
+    
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-4">
+        <div className="max-w-2xl mx-auto text-center">
+          <Logo />
+          
+          <div className="mb-8">
+            <GradeIcon className={`w-24 h-24 mx-auto mb-4 ${grade.color}`} />
+            <h1 className="text-3xl font-bold text-white mb-2">{grade.text}</h1>
+            
+            {gameMode === 'solo' ? (
+              <p className="text-xl text-purple-200">
+                You scored {score} out of {questions.length} ({percentage}%)
+              </p>
+            ) : (
+              <div>
+                <p className="text-xl text-purple-200 mb-4">
+                  {winners.length === 1 
+                    ? `${winners[0][0]} wins with ${winners[0][1]} points!`
+                    : `It's a tie between ${winners.map(w => w[0]).join(' and ')}!`
+                  }
+                </p>
+                <div className="flex flex-wrap justify-center gap-4">
+                  {Object.entries(playerScores)
+                    .sort((a, b) => b[1] - a[1])
+                    .map(([name, pts], i) => (
+                      <div key={name} className="bg-white/10 rounded-lg px-4 py-2">
+                        <span className={i === 0 ? 'text-yellow-400' : 'text-white'}>
+                          {i + 1}. {name}: {pts}
+                        </span>
+                      </div>
+                    ))
+                  }
+                </div>
+              </div>
+            )}
+          </div>
+          
+          {/* Review Section */}
+          {gameMode === 'solo' && answeredQuestions.some(q => !q.correct) && (
+            <div className="bg-white/10 backdrop-blur rounded-xl p-4 mb-6 text-left">
+              <h3 className="text-lg font-semibold text-white mb-4">Questions to Review:</h3>
+              <div className="space-y-3 max-h-64 overflow-y-auto">
+                {answeredQuestions.filter(q => !q.correct).map((q, i) => (
+                  <div key={i} className="bg-white/10 rounded-lg p-3">
+                    <p className="text-white text-sm mb-2">{q.question}</p>
+                    <p className="text-green-400 text-sm">✓ {q.options[q.correct]}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          
+          <div className="space-y-3">
+            <button
+              onClick={() => {
+                if (gameMode === 'solo') {
+                  startSoloGame(category);
+                } else {
+                  startMultiplayerGame(category);
+                }
+              }}
+              className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white p-4 rounded-xl flex items-center justify-center gap-2 font-semibold text-lg transition-all shadow-lg"
+            >
+              <RotateCcw className="w-5 h-5" />
+              Play Again
+            </button>
+            
+            <button
+              onClick={() => setScreen('home')}
+              className="w-full bg-white/10 hover:bg-white/20 text-white p-4 rounded-xl font-semibold transition-all"
+            >
+              Back to Home
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+  
+  // Study Mode Screen
+  const StudyScreen = () => {
+    const [studyCategory, setStudyCategory] = useState('all');
+    const [studyIndex, setStudyIndex] = useState(0);
+    const [showAnswer, setShowAnswer] = useState(false);
+    
+    const studyQuestions = CATEGORIES[studyCategory].ids 
+      ? QUESTIONS.filter(q => CATEGORIES[studyCategory].ids.includes(q.id))
+      : QUESTIONS;
+    
+    const current = studyQuestions[studyIndex];
+    
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-4">
         <div className="max-w-2xl mx-auto">
-          <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-6 text-white shadow-2xl mb-4">
-            <div className="flex items-center justify-between mb-4">
-              <button onClick={() => setScreen('results')} className="p-2 hover:bg-white/10 rounded-lg"><ChevronLeft className="w-5 h-5" /></button>
-              <h2 className="text-xl font-bold flex items-center gap-2"><BookOpen className="w-5 h-5" /> Review ({missedQuestions.length})</h2>
-              <div className="w-9" />
-            </div>
+          <Logo />
+          
+          <button
+            onClick={() => setScreen('home')}
+            className="flex items-center gap-2 text-purple-300 hover:text-white mb-6 transition-colors"
+          >
+            <ChevronLeft className="w-5 h-5" />
+            Back
+          </button>
+          
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-bold text-white">Study Mode</h2>
+            <select
+              value={studyCategory}
+              onChange={(e) => {
+                setStudyCategory(e.target.value);
+                setStudyIndex(0);
+                setShowAnswer(false);
+              }}
+              className="bg-white/20 text-white rounded-lg px-3 py-2 outline-none"
+            >
+              {Object.entries(CATEGORIES).map(([key, { name }]) => (
+                <option key={key} value={key} className="bg-purple-900">{name}</option>
+              ))}
+            </select>
           </div>
-          <div className="space-y-4">
-            {missedQuestions.map((q, i) => (
-              <div key={q.id} className="bg-white/10 backdrop-blur-lg rounded-2xl p-5 text-white">
-                <p className="font-medium mb-4">{i + 1}. {q.question}</p>
-                <div className="space-y-2 mb-4">
-                  {q.options.map((opt, j) => (
-                    <div key={j} className={`p-3 rounded-lg text-sm ${j === q.correct ? 'bg-green-500/20 border border-green-500/50' : j === q.selected ? 'bg-red-500/20 border border-red-500/50' : 'bg-white/5'}`}>
-                      <span className="font-semibold mr-2">{String.fromCharCode(65 + j)}.</span>{opt}
-                      {j === q.correct && <span className="ml-2 text-green-400">✓ Correct</span>}
-                      {j === q.selected && j !== q.correct && <span className="ml-2 text-red-400">✗ Your answer</span>}
-                    </div>
-                  ))}
+          
+          <div className="text-purple-300 mb-4">
+            Question {studyIndex + 1} of {studyQuestions.length}
+          </div>
+          
+          <div className="bg-white/10 backdrop-blur rounded-xl p-6 mb-6">
+            <h3 className="text-lg text-white font-medium mb-6">{current.question}</h3>
+            
+            <div className="space-y-3">
+              {current.options.map((option, i) => (
+                <div
+                  key={i}
+                  className={`p-3 rounded-lg ${
+                    showAnswer && i === current.correct
+                      ? 'bg-green-500/30 border-2 border-green-400'
+                      : 'bg-white/10'
+                  } text-white flex items-center gap-3`}
+                >
+                  <span className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center font-bold text-sm">
+                    {String.fromCharCode(65 + i)}
+                  </span>
+                  {option}
                 </div>
-                <div className="bg-white/5 rounded-lg p-3 text-sm text-purple-100">
-                  <Sparkles className="w-4 h-4 text-yellow-400 inline mr-2" />{q.explanation}
-                </div>
-              </div>
-            ))}
-          </div>
-          <button onClick={() => setScreen('setup')} className="w-full mt-6 py-4 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl font-bold text-white">Back to Home</button>
-        </div>
-      </div>
-    );
-  }
-
-  if (screen === 'results') {
-    const score = results.filter(r => r.correct).length, pct = (score / questions.length) * 100;
-    let grade, gradeColor, GradeIcon;
-    if (pct >= 85) { grade = 'Distinction'; gradeColor = 'from-yellow-400 to-amber-500'; GradeIcon = Trophy; }
-    else if (pct >= 70) { grade = 'Merit'; gradeColor = 'from-gray-300 to-gray-400'; GradeIcon = Award; }
-    else if (pct >= 55) { grade = 'Pass'; gradeColor = 'from-orange-400 to-orange-500'; GradeIcon = Medal; }
-    else { grade = 'Not Yet Passed'; gradeColor = 'from-purple-400 to-purple-500'; GradeIcon = Wine; }
-    
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 flex items-center justify-center p-4">
-        {showConfetti && <Confetti />}
-        <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-8 max-w-md w-full text-white shadow-2xl text-center">
-          <div className={`w-24 h-24 mx-auto mb-6 rounded-full bg-gradient-to-br ${gradeColor} flex items-center justify-center shadow-lg ${pct >= 85 ? 'animate-pulse' : ''}`}><GradeIcon className="w-12 h-12 text-white" /></div>
-          <h1 className="text-3xl font-bold mb-2">{grade}</h1>
-          <p className="text-purple-200 mb-2">{pct >= 55 ? 'Congratulations!' : 'Keep practicing!'}</p>
-          <p className="text-xs text-purple-300 mb-6">{CATEGORIES[category].name}</p>
-
-          {showNameInput && (
-            <div className="bg-white/5 rounded-xl p-4 mb-6">
-              <p className="text-sm text-purple-200 mb-2">Add to leaderboard:</p>
-              <div className="flex gap-2">
-                <input type="text" value={playerName} onChange={e => setPlayerName(e.target.value)} placeholder="Your name" maxLength={20} className="flex-1 px-3 py-2 rounded-lg bg-white/10 border border-white/20 text-white placeholder-purple-300 text-sm" />
-                <button onClick={addToLeaderboard} className="px-4 py-2 bg-purple-500 rounded-lg font-semibold text-sm hover:bg-purple-600">Add</button>
-                <button onClick={() => setShowNameInput(false)} className="p-2 hover:bg-white/10 rounded-lg"><X className="w-5 h-5" /></button>
-              </div>
+              ))}
             </div>
-          )}
-
-          <div className="bg-white/5 rounded-xl p-6 mb-6">
-            <div className="text-5xl font-bold mb-2 bg-gradient-to-r from-purple-300 to-pink-300 bg-clip-text text-transparent">{score}/{questions.length}</div>
-            <p className="text-purple-200">{pct.toFixed(1)}% correct</p>
+            
+            {showAnswer && (
+              <div className="mt-6 p-4 bg-blue-500/20 rounded-lg">
+                <p className="text-blue-100">{current.explanation}</p>
+              </div>
+            )}
           </div>
-
-          <div className="grid grid-cols-3 gap-4 mb-6 text-sm">
-            <div className={`p-3 rounded-xl ${pct >= 55 ? 'bg-green-500/20' : 'bg-white/5'}`}><p className="text-purple-200">Pass</p><p className="font-semibold">55%</p></div>
-            <div className={`p-3 rounded-xl ${pct >= 70 ? 'bg-green-500/20' : 'bg-white/5'}`}><p className="text-purple-200">Merit</p><p className="font-semibold">70%</p></div>
-            <div className={`p-3 rounded-xl ${pct >= 85 ? 'bg-green-500/20' : 'bg-white/5'}`}><p className="text-purple-200">Distinction</p><p className="font-semibold">85%</p></div>
-          </div>
-
-          {missedQuestions.length > 0 && (
-            <button onClick={() => setScreen('review')} className="w-full py-3 mb-3 bg-white/10 rounded-xl font-semibold hover:bg-white/20 transition-all flex items-center justify-center gap-2">
-              <BookOpen className="w-5 h-5" /> Review {missedQuestions.length} Missed
+          
+          <div className="flex gap-3">
+            <button
+              onClick={() => {
+                setStudyIndex((studyIndex - 1 + studyQuestions.length) % studyQuestions.length);
+                setShowAnswer(false);
+              }}
+              className="flex-1 bg-white/10 hover:bg-white/20 text-white p-3 rounded-xl font-medium transition-all"
+            >
+              Previous
             </button>
-          )}
-
-          <button onClick={() => setScreen('setup')} className="w-full py-4 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl font-bold hover:opacity-90 transition-all flex items-center justify-center gap-2"><RotateCcw className="w-5 h-5" /> Try Again</button>
+            
+            <button
+              onClick={() => setShowAnswer(!showAnswer)}
+              className="flex-1 bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white p-3 rounded-xl font-medium transition-all"
+            >
+              {showAnswer ? 'Hide Answer' : 'Show Answer'}
+            </button>
+            
+            <button
+              onClick={() => {
+                setStudyIndex((studyIndex + 1) % studyQuestions.length);
+                setShowAnswer(false);
+              }}
+              className="flex-1 bg-white/10 hover:bg-white/20 text-white p-3 rounded-xl font-medium transition-all"
+            >
+              Next
+            </button>
+          </div>
         </div>
       </div>
     );
+  };
+  
+  // Render appropriate screen
+  switch (screen) {
+    case 'home':
+      return <HomeScreen />;
+    case 'solo-category':
+      return <CategoryScreen onSelect={startSoloGame} mode="solo" />;
+    case 'multiplayer-setup':
+      return <MultiplayerSetupScreen />;
+    case 'multiplayer-category':
+      return <CategoryScreen onSelect={startMultiplayerGame} mode="multiplayer" />;
+    case 'quiz':
+      return <QuizScreen />;
+    case 'results':
+      return <ResultsScreen />;
+    case 'study':
+      return <StudyScreen />;
+    default:
+      return <HomeScreen />;
   }
-  return null;
 }
